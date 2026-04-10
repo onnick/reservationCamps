@@ -32,9 +32,19 @@ export DB_PASSWORD=reservationcamps
 mvn -B spring-boot:run
 ```
 
+Run without PostgreSQL (in-memory H2, profile `local`, port 8081):
+```bash
+mvn -B spring-boot:run -Dspring-boot.run.profiles=local
+```
+
 Health:
 ```bash
 curl -fsS http://localhost:8080/actuator/health
+```
+
+Local profile health:
+```bash
+curl -fsS http://localhost:8081/actuator/health
 ```
 
 ## API
