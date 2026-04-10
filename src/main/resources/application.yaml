@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: reservation-camps
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/reservationcamps}
+    username: ${DB_USERNAME:reservationcamps}
+    password: ${DB_PASSWORD:reservationcamps}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
