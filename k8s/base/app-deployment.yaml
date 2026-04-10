@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reservationcamps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reservationcamps
+  template:
+    metadata:
+      labels:
+        app: reservationcamps
+    spec:
+      containers:
+        - name: reservationcamps
+          image: reservationcamps
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: reservationcamps-config
+            - secretRef:
+                name: reservationcamps-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
+

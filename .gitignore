@@ -4,6 +4,7 @@ target/
 !**/src/test/**/target/
 .kotlin
 .m2/
+k8s/**/secret.env
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

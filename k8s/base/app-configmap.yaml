@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reservationcamps-config
+data:
+  DB_URL: jdbc:postgresql://postgres:5432/reservationcamps
+
