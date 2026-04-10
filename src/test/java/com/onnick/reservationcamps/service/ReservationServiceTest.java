@@ -66,6 +66,32 @@ class ReservationServiceTest {
     }
 
     @Test
+    void createReservationRejectsWhenSessionAlreadyStarted() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service =
+                new ReservationService(userRepository, sessionRepository, reservationRepository, notificationPort, clock);
+
+        var userId = UUID.randomUUID();
+        var sessionId = UUID.randomUUID();
+
+        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
+        var session =
+                new CampSession(
+                        sessionId, camp, LocalDate.of(2026, 4, 10), LocalDate.of(2026, 4, 12), 10, NOW);
+
+        when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> service.createReservation(sessionId, userId))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .satisfies(
+                        ex ->
+                                assertThat(((BusinessRuleViolationException) ex).getCode())
+                                        .isEqualTo("reservation.session_started"));
+    }
+
+    @Test
     void confirmSetsStatusAndSendsNotification() {
         var clock = Clock.fixed(NOW, ZoneOffset.UTC);
         var service =
@@ -93,6 +119,35 @@ class ReservationServiceTest {
         assertThat(saved.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
         assertThat(saved.getConfirmedAt()).isEqualTo(NOW);
         verify(notificationPort).reservationConfirmed(reservationId);
+    }
+
+    @Test
+    void confirmRejectsWhenStatusIsNotCreated() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service =
+                new ReservationService(userRepository, sessionRepository, reservationRepository, notificationPort, clock);
+
+        var userId = UUID.randomUUID();
+        var sessionId = UUID.randomUUID();
+        var reservationId = UUID.randomUUID();
+
+        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
+        var session =
+                new CampSession(
+                        sessionId, camp, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 7), 2, NOW);
+
+        var reservation =
+                new Reservation(reservationId, session, user, ReservationStatus.CANCELLED, NOW, null, null, NOW);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        assertThatThrownBy(() -> service.confirmReservation(reservationId))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .satisfies(
+                        ex ->
+                                assertThat(((BusinessRuleViolationException) ex).getCode())
+                                        .isEqualTo("reservation.status.invalid"));
     }
 
     @Test
@@ -156,5 +211,61 @@ class ReservationServiceTest {
                                         .isEqualTo("reservation.status.invalid"));
 
         verify(notificationPort, never()).reservationPaid(any());
+    }
+
+    @Test
+    void paySetsStatusAndSendsNotification() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service =
+                new ReservationService(userRepository, sessionRepository, reservationRepository, notificationPort, clock);
+
+        var userId = UUID.randomUUID();
+        var sessionId = UUID.randomUUID();
+        var reservationId = UUID.randomUUID();
+
+        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
+        var session =
+                new CampSession(
+                        sessionId, camp, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 7), 1, NOW);
+
+        var reservation =
+                new Reservation(reservationId, session, user, ReservationStatus.CONFIRMED, NOW, NOW, null, null);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var saved = service.payReservation(reservationId);
+
+        assertThat(saved.getStatus()).isEqualTo(ReservationStatus.PAID);
+        assertThat(saved.getPaidAt()).isEqualTo(NOW);
+        verify(notificationPort).reservationPaid(reservationId);
+    }
+
+    @Test
+    void cancelSetsStatusAndTimestamp() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service =
+                new ReservationService(userRepository, sessionRepository, reservationRepository, notificationPort, clock);
+
+        var userId = UUID.randomUUID();
+        var sessionId = UUID.randomUUID();
+        var reservationId = UUID.randomUUID();
+
+        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
+        var session =
+                new CampSession(
+                        sessionId, camp, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 7), 1, NOW);
+
+        var reservation = new Reservation(reservationId, session, user, ReservationStatus.CREATED, NOW, null, null, null);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var saved = service.cancelReservation(reservationId);
+
+        assertThat(saved.getStatus()).isEqualTo(ReservationStatus.CANCELLED);
+        assertThat(saved.getCancelledAt()).isEqualTo(NOW);
     }
 }

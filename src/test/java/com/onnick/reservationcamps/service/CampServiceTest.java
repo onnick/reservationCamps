@@ -38,6 +38,19 @@ class CampServiceTest {
     }
 
     @Test
+    void createCampRejectsInvalidPrice() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service = new CampService(campRepository, campSessionRepository, clock);
+
+        assertThatThrownBy(() -> service.createCamp(new Actor(UUID.randomUUID(), UserRole.ADMIN), "Camp", 0))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .satisfies(
+                        ex ->
+                                assertThat(((BusinessRuleViolationException) ex).getCode())
+                                        .isEqualTo("camp.base_price.invalid"));
+    }
+
+    @Test
     void createSessionRejectsWhenStartDateInPast() {
         var clock = Clock.fixed(NOW, ZoneOffset.UTC);
         var service = new CampService(campRepository, campSessionRepository, clock);
@@ -58,5 +71,28 @@ class CampServiceTest {
                         ex ->
                                 assertThat(((BusinessRuleViolationException) ex).getCode())
                                         .isEqualTo("session.start_in_past"));
+    }
+
+    @Test
+    void createSessionRejectsWhenDatesInvalid() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service = new CampService(campRepository, campSessionRepository, clock);
+
+        var campId = UUID.randomUUID();
+        when(campRepository.findById(campId)).thenReturn(Optional.of(new Camp(campId, "Camp", 1000, NOW)));
+
+        assertThatThrownBy(
+                        () ->
+                                service.createSession(
+                                        new Actor(UUID.randomUUID(), UserRole.ADMIN),
+                                        campId,
+                                        LocalDate.of(2026, 5, 7),
+                                        LocalDate.of(2026, 5, 7),
+                                        10))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .satisfies(
+                        ex ->
+                                assertThat(((BusinessRuleViolationException) ex).getCode())
+                                        .isEqualTo("session.date.invalid"));
     }
 }

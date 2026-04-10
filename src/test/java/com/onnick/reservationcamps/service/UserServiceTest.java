@@ -54,4 +54,30 @@ class UserServiceTest {
                                 assertThat(((BusinessRuleViolationException) ex).getCode())
                                         .isEqualTo("user.email.duplicate"));
     }
+
+    @Test
+    void rejectsBlankEmail() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service = new UserService(userRepository, clock);
+
+        assertThatThrownBy(() -> service.createUser(" ", UserRole.CUSTOMER))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .satisfies(
+                        ex ->
+                                assertThat(((BusinessRuleViolationException) ex).getCode())
+                                        .isEqualTo("user.email.required"));
+    }
+
+    @Test
+    void rejectsNullRole() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service = new UserService(userRepository, clock);
+
+        assertThatThrownBy(() -> service.createUser("a@example.com", null))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .satisfies(
+                        ex ->
+                                assertThat(((BusinessRuleViolationException) ex).getCode())
+                                        .isEqualTo("user.role.required"));
+    }
 }
