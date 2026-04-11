@@ -8,6 +8,7 @@ import com.onnick.reservationcamps.domain.error.NotFoundException;
 import com.onnick.reservationcamps.domain.repo.AppUserRepository;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,19 @@ public class UserService {
             return Optional.empty();
         }
         return userRepository.findByEmail(normalized);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AppUser> searchByEmail(String q) {
+        if (q == null) {
+            return List.of();
+        }
+        var normalized = q.trim().toLowerCase();
+        if (normalized.isBlank()) {
+            return List.of();
+        }
+        // Used by the demo UI for "pick existing user". In a real app this should be access-controlled.
+        return userRepository.findTop20ByEmailContainingIgnoreCaseOrderByEmailAsc(normalized);
     }
 
     @Transactional(readOnly = true)

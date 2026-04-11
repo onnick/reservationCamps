@@ -3,6 +3,7 @@ package com.onnick.reservationcamps.api;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,6 +15,7 @@ import com.onnick.reservationcamps.domain.AppUser;
 import com.onnick.reservationcamps.domain.UserRole;
 import com.onnick.reservationcamps.service.UserService;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,5 +72,19 @@ class UserControllerTest {
                                 .content(objectMapper.writeValueAsString(new LoginRequest("a@example.com", "password123"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()));
+    }
+
+    @Test
+    void searchReturnsUsers() throws Exception {
+        var u1 = new AppUser(UUID.randomUUID(), "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
+        var u2 = new AppUser(UUID.randomUUID(), "b@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
+        when(userService.searchByEmail(eq("ex"))).thenReturn(List.of(u1, u2));
+
+        mvc.perform(get("/api/users/search?q=ex"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(u1.getId().toString()))
+                .andExpect(jsonPath("$[0].email").value("a@example.com"))
+                .andExpect(jsonPath("$[1].id").value(u2.getId().toString()))
+                .andExpect(jsonPath("$[1].email").value("b@example.com"));
     }
 }

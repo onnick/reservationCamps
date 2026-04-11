@@ -10,6 +10,7 @@ import com.onnick.reservationcamps.domain.repo.AppUserRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -99,5 +100,16 @@ class UserServiceTest {
                         ex ->
                                 assertThat(((BusinessRuleViolationException) ex).getCode())
                                         .isEqualTo("user.password.required"));
+    }
+
+    @Test
+    void searchByEmailNormalizesAndDelegatesToRepo() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service = new UserService(userRepository, clock, new BCryptPasswordEncoder());
+
+        when(userRepository.findTop20ByEmailContainingIgnoreCaseOrderByEmailAsc("ex"))
+                .thenReturn(List.of());
+
+        assertThat(service.searchByEmail(" EX ")).isEmpty();
     }
 }

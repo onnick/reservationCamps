@@ -461,7 +461,8 @@
           <div class="row cols3">
             <div>
               <label for="userEmail">Email</label>
-              <input id="userEmail" placeholder="např. jana.novakova@example.com" inputmode="email" />
+              <input id="userEmail" placeholder="např. jana.novakova@example.com" inputmode="email" list="userEmailList" />
+              <datalist id="userEmailList"></datalist>
               <div class="hint">Používáme jen pro identifikaci rezervace v téhle demo aplikaci.</div>
             </div>
             <div>
@@ -477,7 +478,13 @@
           </div>
           <div class="actions">
             <button type="button" id="ensureUserBtn">Pokračovat</button>
+            <button class="secondary" type="button" id="pickExistingUserBtn" title="Rychlý výběr uživatele jen podle emailu (vývoj)">
+              Vybrat existujícího
+            </button>
             <button class="secondary" type="button" id="signOutBtn">Vymazat údaje</button>
+          </div>
+          <div class="hint">
+            <code>Vybrat existujícího</code> načte uživatele z DB jen podle emailu (bez hesla) pro rychlé testování.
           </div>
 
           <div class="sep"></div>
@@ -737,6 +744,29 @@
         document.getElementById(id).disabled = !on;
       }
 
+      let emailSuggestTimer = null;
+      async function refreshEmailSuggestions() {
+        const q = getVal("userEmail");
+        const list = document.getElementById("userEmailList");
+        list.innerHTML = "";
+        if (!q || q.length < 2) return;
+        try {
+          const users = await request("GET", `/api/users/search?q=${encodeURIComponent(q)}`);
+          for (const u of users || []) {
+            const opt = document.createElement("option");
+            opt.value = u.email;
+            list.appendChild(opt);
+          }
+        } catch (_) {
+          // best-effort suggestions only
+        }
+      }
+
+      function scheduleEmailSuggestions() {
+        if (emailSuggestTimer) window.clearTimeout(emailSuggestTimer);
+        emailSuggestTimer = window.setTimeout(refreshEmailSuggestions, 220);
+      }
+
       function persist() {
         if (state.email) localStorage.setItem(LS.email, state.email);
         if (state.reservationId) localStorage.setItem(LS.reservationId, state.reservationId);
@@ -887,6 +917,33 @@
           toast("bad", niceError(e), "Uživatel");
         } finally {
           setEnabled("ensureUserBtn", true);
+        }
+      }
+
+      async function pickExistingUser() {
+        const email = getVal("userEmail");
+        if (!email) {
+          toast("bad", "Zadejte email.", "Uživatel");
+          return;
+        }
+        setEnabled("pickExistingUserBtn", false);
+        try {
+          const user = await request("GET", `/api/users/by-email?email=${encodeURIComponent(email)}`);
+          write("user-picked", user);
+          state.email = (user.email || email).trim().toLowerCase();
+          state.userId = user.id;
+          setVal("userId", user.id);
+          persist();
+
+          setEnabled("campSelect", true);
+          setEnabled("reloadBtn", true);
+          await loadCamps();
+          toast("good", "Uživatel vybrán. Můžete vybrat tábor.", "Uživatel");
+        } catch (e) {
+          write("user-picked-error", e);
+          toast("bad", niceError(e), "Uživatel");
+        } finally {
+          setEnabled("pickExistingUserBtn", true);
         }
       }
 
@@ -1074,6 +1131,7 @@
       }
 
       document.getElementById("ensureUserBtn").addEventListener("click", ensureUser);
+      document.getElementById("pickExistingUserBtn").addEventListener("click", pickExistingUser);
       document.getElementById("signOutBtn").addEventListener("click", () => {
         clearPersisted();
         state.userId = null;
@@ -1119,6 +1177,8 @@
 
       document.getElementById("refreshHealthBtn").addEventListener("click", refreshHealth);
       document.getElementById("clearBtn").addEventListener("click", () => (out.textContent = ""));
+
+      document.getElementById("userEmail").addEventListener("input", scheduleEmailSuggestions);
 
       document.getElementById("reservationId").addEventListener("change", () => {
         const v = getVal("reservationId");

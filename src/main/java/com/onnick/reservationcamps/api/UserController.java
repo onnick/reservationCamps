@@ -4,12 +4,14 @@ import com.onnick.reservationcamps.api.dto.CreateUserRequest;
 import com.onnick.reservationcamps.api.dto.IdResponse;
 import com.onnick.reservationcamps.api.dto.LoginRequest;
 import com.onnick.reservationcamps.api.dto.UserResponse;
+import com.onnick.reservationcamps.api.dto.UserSummaryResponse;
 import com.onnick.reservationcamps.domain.UserRole;
 import com.onnick.reservationcamps.domain.error.NotFoundException;
 import com.onnick.reservationcamps.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +38,11 @@ public class UserController {
                 .findByEmail(email)
                 .map(u -> new UserResponse(u.getId(), u.getEmail(), u.getRole()))
                 .orElseThrow(() -> new NotFoundException("User not found."));
+    }
+
+    @GetMapping("/search")
+    public List<UserSummaryResponse> search(@RequestParam("q") @NotBlank String q) {
+        return userService.searchByEmail(q).stream().map(u -> new UserSummaryResponse(u.getId(), u.getEmail())).toList();
     }
 
     @PostMapping
