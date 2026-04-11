@@ -387,7 +387,7 @@
         t.innerHTML = `
           <thead>
             <tr>
-              <th>ID rezervace</th>
+              <th>Tábor</th>
               <th>Od</th>
               <th>Do</th>
               <th>Stav</th>
@@ -399,7 +399,7 @@
         for (const r of items) {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td class="cell-id">${r.id}</td>
+            <td>${r.campName || "—"}</td>
             <td>${r.startDate || "—"}</td>
             <td>${r.endDate || "—"}</td>
             <td class="cell-status"><span class="status ${statusClass(r.status)}">${r.status}</span></td>
@@ -414,15 +414,17 @@
       async function getSessionIndex() {
         if (sessionIndexPromise) return sessionIndexPromise;
         sessionIndexPromise = (async () => {
-          const index = new Map();
+          const sessionsById = new Map();
+          const campNameById = new Map();
           const camps = await request("GET", "/api/camps");
+          for (const c of camps || []) campNameById.set(c.id, c.name);
           const sessionLists = await Promise.all(
             (camps || []).map((c) => request("GET", `/api/camps/${encodeURIComponent(c.id)}/sessions`))
           );
           for (const sessions of sessionLists) {
-            for (const s of sessions || []) index.set(s.id, s);
+            for (const s of sessions || []) sessionsById.set(s.id, s);
           }
-          return index;
+          return { sessionsById, campNameById };
         })();
         return sessionIndexPromise;
       }
@@ -434,22 +436,59 @@
         }
         try {
           const data = await request("GET", `/api/users/${encodeURIComponent(state.userId)}/reservations`);
+          if (!Array.isArray(data)) {
+            render([]);
+            return;
+          }
+
+          let rows;
           // Backwards-compatible: older API returned reservations with sessionId; newer returns flattened start/end.
-          if (Array.isArray(data) && data.length && !data[0].startDate && data[0].sessionId) {
-            const idx = await getSessionIndex();
-            const rows = data.map((r) => {
-              const s = idx.get(r.sessionId);
+          if (data.length && !data[0].startDate && data[0].sessionId) {
+            const lookup = await getSessionIndex();
+            rows = data.map((r) => {
+              const s = lookup.sessionsById.get(r.sessionId);
+              const campName = s ? lookup.campNameById.get(s.campId) : undefined;
               return {
                 id: r.id,
+                campName,
                 startDate: s ? s.startDate : undefined,
                 endDate: s ? s.endDate : undefined,
                 status: r.status,
               };
             });
-            render(rows);
           } else {
-            render(data);
+            rows = data.map((r) => ({
+              id: r.id,
+              campName: r.campName,
+              startDate: r.startDate,
+              endDate: r.endDate,
+              status: r.status,
+            }));
           }
+
+          // If campName is missing (e.g. older backend), fill it via reservation detail -> session -> camp index.
+          const missing = rows.filter((r) => r && r.id && !r.campName);
+          if (missing.length) {
+            try {
+              const details = await Promise.all(
+                missing.map((r) => request("GET", `/api/reservations/${encodeURIComponent(r.id)}`))
+              );
+              const lookup = await getSessionIndex();
+              const byId = new Map(missing.map((r) => [r.id, r]));
+              for (const d of details || []) {
+                const row = d && d.id ? byId.get(d.id) : null;
+                if (!row) continue;
+                const s = d.sessionId ? lookup.sessionsById.get(d.sessionId) : null;
+                if (!s) continue;
+                const campName = lookup.campNameById.get(s.campId);
+                if (campName) row.campName = campName;
+              }
+            } catch (_) {
+              // Ignore enrichment errors; UI still renders dates/status.
+            }
+          }
+
+          render(rows);
         } catch (e) {
           toast("bad", niceError(e), "Rezervace");
           render([]);

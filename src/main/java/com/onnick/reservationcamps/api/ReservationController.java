@@ -36,6 +36,7 @@ public class ReservationController {
         return reservationService.listReservationsForUser(userId).stream()
                 .map(r -> new UserReservationRowResponse(
                         r.getId(),
+                        r.getSession().getCamp().getName(),
                         r.getSession().getStartDate(),
                         r.getSession().getEndDate(),
                         r.getStatus()))

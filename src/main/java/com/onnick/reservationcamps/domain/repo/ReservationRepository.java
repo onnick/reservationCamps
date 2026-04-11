@@ -17,6 +17,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
             select r
             from Reservation r
             join fetch r.session s
+            join fetch s.camp c
             join fetch r.user u
             where u.id = :userId
             order by r.createdAt desc

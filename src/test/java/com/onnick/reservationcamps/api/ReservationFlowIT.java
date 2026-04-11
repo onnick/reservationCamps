@@ -99,6 +99,7 @@ class ReservationFlowIT {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().length).isGreaterThanOrEqualTo(1);
+        assertThat(response.getBody()[0].campName()).isEqualTo("Camp");
         assertThat(response.getBody()[0].startDate()).isEqualTo(LocalDate.of(2026, 5, 1));
         assertThat(response.getBody()[0].endDate()).isEqualTo(LocalDate.of(2026, 5, 7));
         assertThat(response.getBody()[0].status()).isEqualTo(ReservationStatus.CREATED);

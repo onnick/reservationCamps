@@ -4,5 +4,5 @@ import com.onnick.reservationcamps.domain.ReservationStatus;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record UserReservationRowResponse(UUID id, LocalDate startDate, LocalDate endDate, ReservationStatus status) {}
-
+public record UserReservationRowResponse(
+        UUID id, String campName, LocalDate startDate, LocalDate endDate, ReservationStatus status) {}
