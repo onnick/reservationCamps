@@ -105,5 +105,22 @@ jobs:
           PF_PID=$!
           sleep 3
           curl -fsS http://localhost:8080/actuator/health
+          curl -fsS http://localhost:8080/actuator/prometheus > prometheus-metrics.txt
           kill $PF_PID
 
+      - name: Collect logs (staging)
+        if: always()
+        run: |
+          kubectl -n staging get pods -o wide
+          kubectl -n staging logs deploy/reservationcamps --tail=500 > reservationcamps.log
+          kubectl -n staging logs deploy/postgres --tail=200 > postgres.log
+
+      - name: Upload staging observability artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-observability
+          path: |
+            prometheus-metrics.txt
+            reservationcamps.log
+            postgres.log

@@ -100,6 +100,7 @@ GitHub Actions:
 - Checkstyle
 - build + push Docker image do GHCR na `main`
 - deploy do Kubernetes `staging` na `main` (kind na runneru) + smoke test
+- observability (bonus): po staging deploy se stáhnou logy z Kubernetes a export metrik z `/actuator/prometheus` jako artefakt
 
 ## Kubernetes
 Manifesty používají Kustomize overlay:
