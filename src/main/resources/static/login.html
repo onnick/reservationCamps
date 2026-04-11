@@ -172,21 +172,6 @@
         display: grid;
         gap: 10px;
       }
-      .item {
-        border-radius: var(--radius);
-        border: 1px solid rgba(30, 42, 38, 0.12);
-        background: rgba(255, 255, 255, 0.70);
-        padding: 12px 12px;
-        display: grid;
-        gap: 6px;
-      }
-      .item .top {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
       .mono {
         font-family: var(--mono);
         font-size: 12px;
@@ -250,6 +235,46 @@
         text-decoration-thickness: 1px;
         text-underline-offset: 2px;
       }
+
+      .resGridWrap {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      table.resGrid {
+        display: table; /* avoid collision with the page-layout `.grid` class */
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid rgba(30, 42, 38, 0.12);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.70);
+      }
+      table.resGrid th,
+      table.resGrid td {
+        padding: 10px 10px;
+        border-bottom: 1px solid rgba(30, 42, 38, 0.10);
+        text-align: left;
+        vertical-align: middle;
+        font-size: 13px;
+      }
+      table.resGrid th {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.22px;
+        color: rgba(30, 42, 38, 0.62);
+        background: rgba(255, 255, 255, 0.55);
+      }
+      table.resGrid tr:last-child td {
+        border-bottom: none;
+      }
+      .cell-id {
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .cell-status {
+        white-space: nowrap;
+      }
     </style>
   </head>
   <body>
@@ -286,7 +311,7 @@
 
         <section class="card">
           <h2>Moje rezervace</h2>
-          <div class="list" id="list"></div>
+          <div id="grid"></div>
           <div class="hint" id="emptyHint" style="display: none">Zatím nemáte žádné rezervace.</div>
         </section>
       </div>
@@ -298,7 +323,7 @@
       document.getElementById("baseUrlPill").textContent = window.location.origin;
 
       const toastRoot = document.getElementById("toast");
-      const list = document.getElementById("list");
+      const grid = document.getElementById("grid");
       const emptyHint = document.getElementById("emptyHint");
       const userIdText = document.getElementById("userIdText");
 
@@ -349,28 +374,57 @@
       }
 
       function render(items) {
-        list.innerHTML = "";
+        grid.innerHTML = "";
         if (!items || !items.length) {
           emptyHint.style.display = "block";
           return;
         }
         emptyHint.style.display = "none";
+        const wrap = document.createElement("div");
+        wrap.className = "resGridWrap";
+        const t = document.createElement("table");
+        t.className = "resGrid";
+        t.innerHTML = `
+          <thead>
+            <tr>
+              <th>ID rezervace</th>
+              <th>Od</th>
+              <th>Do</th>
+              <th>Stav</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+        const body = t.querySelector("tbody");
         for (const r of items) {
-          const el = document.createElement("div");
-          el.className = "item";
-          el.innerHTML = `
-            <div class="top">
-              <div class="mono">Rezervace: ${r.id}</div>
-              <div class="status ${statusClass(r.status)}">${r.status}</div>
-            </div>
-            <div class="mono">Termín (sessionId): ${r.sessionId}</div>
-            <div class="mono">Vytvořeno: ${r.createdAt}</div>
-            <div class="mono">
-              <a href="/?reservationId=${encodeURIComponent(r.id)}">Otevřít v aplikaci</a>
-            </div>
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="cell-id">${r.id}</td>
+            <td>${r.startDate || "—"}</td>
+            <td>${r.endDate || "—"}</td>
+            <td class="cell-status"><span class="status ${statusClass(r.status)}">${r.status}</span></td>
           `;
-          list.appendChild(el);
+          body.appendChild(tr);
         }
+        wrap.appendChild(t);
+        grid.appendChild(wrap);
+      }
+
+      let sessionIndexPromise = null;
+      async function getSessionIndex() {
+        if (sessionIndexPromise) return sessionIndexPromise;
+        sessionIndexPromise = (async () => {
+          const index = new Map();
+          const camps = await request("GET", "/api/camps");
+          const sessionLists = await Promise.all(
+            (camps || []).map((c) => request("GET", `/api/camps/${encodeURIComponent(c.id)}/sessions`))
+          );
+          for (const sessions of sessionLists) {
+            for (const s of sessions || []) index.set(s.id, s);
+          }
+          return index;
+        })();
+        return sessionIndexPromise;
       }
 
       async function loadReservations() {
@@ -380,7 +434,22 @@
         }
         try {
           const data = await request("GET", `/api/users/${encodeURIComponent(state.userId)}/reservations`);
-          render(data);
+          // Backwards-compatible: older API returned reservations with sessionId; newer returns flattened start/end.
+          if (Array.isArray(data) && data.length && !data[0].startDate && data[0].sessionId) {
+            const idx = await getSessionIndex();
+            const rows = data.map((r) => {
+              const s = idx.get(r.sessionId);
+              return {
+                id: r.id,
+                startDate: s ? s.startDate : undefined,
+                endDate: s ? s.endDate : undefined,
+                status: r.status,
+              };
+            });
+            render(rows);
+          } else {
+            render(data);
+          }
         } catch (e) {
           toast("bad", niceError(e), "Rezervace");
           render([]);

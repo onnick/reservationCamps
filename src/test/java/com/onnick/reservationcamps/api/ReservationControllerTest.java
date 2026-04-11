@@ -99,8 +99,9 @@ class ReservationControllerTest {
 
         mvc.perform(get("/api/users/" + userId + "/reservations"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].userId").value(userId.toString()))
-                .andExpect(jsonPath("$[0].sessionId").value(sessionId.toString()))
+                .andExpect(jsonPath("$[0].id").value(reservation.getId().toString()))
+                .andExpect(jsonPath("$[0].startDate").value("2026-05-01"))
+                .andExpect(jsonPath("$[0].endDate").value("2026-05-07"))
                 .andExpect(jsonPath("$[0].status").value("CREATED"));
     }
 }

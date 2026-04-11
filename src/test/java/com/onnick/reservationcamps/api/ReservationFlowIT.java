@@ -8,6 +8,7 @@ import com.onnick.reservationcamps.api.dto.CreateSessionRequest;
 import com.onnick.reservationcamps.api.dto.CreateUserRequest;
 import com.onnick.reservationcamps.api.dto.IdResponse;
 import com.onnick.reservationcamps.api.dto.ReservationResponse;
+import com.onnick.reservationcamps.api.dto.UserReservationRowResponse;
 import com.onnick.reservationcamps.domain.ReservationStatus;
 import com.onnick.reservationcamps.domain.UserRole;
 import java.time.Clock;
@@ -94,11 +95,13 @@ class ReservationFlowIT {
 
         createReservation(sessionId, userId);
 
-        var response = http.getForEntity("/api/users/" + userId + "/reservations", ReservationResponse[].class);
+        var response = http.getForEntity("/api/users/" + userId + "/reservations", UserReservationRowResponse[].class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().length).isGreaterThanOrEqualTo(1);
-        assertThat(response.getBody()[0].userId()).isEqualTo(userId);
+        assertThat(response.getBody()[0].startDate()).isEqualTo(LocalDate.of(2026, 5, 1));
+        assertThat(response.getBody()[0].endDate()).isEqualTo(LocalDate.of(2026, 5, 7));
+        assertThat(response.getBody()[0].status()).isEqualTo(ReservationStatus.CREATED);
     }
 
     private UUID createUser(String email) {

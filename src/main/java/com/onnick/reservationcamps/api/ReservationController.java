@@ -2,6 +2,7 @@ package com.onnick.reservationcamps.api;
 
 import com.onnick.reservationcamps.api.dto.CreateReservationRequest;
 import com.onnick.reservationcamps.api.dto.ReservationResponse;
+import com.onnick.reservationcamps.api.dto.UserReservationRowResponse;
 import com.onnick.reservationcamps.domain.Reservation;
 import com.onnick.reservationcamps.service.ReservationService;
 import jakarta.validation.Valid;
@@ -31,8 +32,14 @@ public class ReservationController {
     }
 
     @GetMapping("/users/{userId}/reservations")
-    public List<ReservationResponse> listForUser(@PathVariable UUID userId) {
-        return reservationService.listReservationsForUser(userId).stream().map(ReservationController::toResponse).toList();
+    public List<UserReservationRowResponse> listForUser(@PathVariable UUID userId) {
+        return reservationService.listReservationsForUser(userId).stream()
+                .map(r -> new UserReservationRowResponse(
+                        r.getId(),
+                        r.getSession().getStartDate(),
+                        r.getSession().getEndDate(),
+                        r.getStatus()))
+                .toList();
     }
 
     @PostMapping("/sessions/{sessionId}/reservations")
