@@ -34,7 +34,7 @@ mvn -B spring-boot:run
 
 Run without PostgreSQL (in-memory H2, profile `local`, port 8081):
 ```bash
-mvn -B spring-boot:run -Dspring-boot.run.profiles=local
+mvn -B clean spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
 Health:

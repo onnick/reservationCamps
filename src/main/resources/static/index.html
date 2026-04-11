@@ -1,0 +1,1132 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rezervace táborů</title>
+    <style>
+      :root {
+        --bg0: #fbf7ee;
+        --bg1: #f3efe4;
+        --ink: #1e2a26;
+        --muted: rgba(30, 42, 38, 0.72);
+        --line: rgba(30, 42, 38, 0.14);
+        --card: rgba(255, 255, 255, 0.72);
+        --card2: rgba(255, 255, 255, 0.58);
+        --shadow: 0 18px 55px rgba(30, 42, 38, 0.13);
+
+        --accent: #2f7d4a;
+        --accent2: #c86e3a;
+        --accent3: #2f5f8f;
+
+        --good: #1f8a54;
+        --bad: #c53939;
+        --warn: #b6811c;
+
+        --radius: 18px;
+        --radius2: 12px;
+
+        --sans: ui-sans-serif, "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, system-ui;
+        --display: ui-serif, "Iowan Old Style", "New York", Palatino, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--ink);
+        background:
+          radial-gradient(1200px 600px at 10% 0%, rgba(47, 125, 74, 0.12), transparent 60%),
+          radial-gradient(800px 520px at 90% 0%, rgba(200, 110, 58, 0.10), transparent 55%),
+          radial-gradient(700px 520px at 25% 95%, rgba(47, 95, 143, 0.09), transparent 60%),
+          linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 100%);
+      }
+      .grain {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.07;
+        mix-blend-mode: multiply;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      }
+
+      header {
+        padding: 24px 18px 14px;
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px;
+        border-radius: calc(var(--radius) + 2px);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.80), rgba(255, 255, 255, 0.60));
+        border: 1px solid rgba(30, 42, 38, 0.10);
+        box-shadow: var(--shadow);
+        position: relative;
+        overflow: hidden;
+        transform: translateY(0);
+        animation: rise 520ms ease-out both;
+      }
+      .hero:before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        background:
+          radial-gradient(400px 240px at 20% 30%, rgba(47, 125, 74, 0.18), transparent 60%),
+          radial-gradient(320px 240px at 80% 20%, rgba(200, 110, 58, 0.16), transparent 55%),
+          radial-gradient(360px 260px at 55% 100%, rgba(47, 95, 143, 0.12), transparent 60%);
+        z-index: 0;
+      }
+      .hero > * {
+        position: relative;
+        z-index: 1;
+      }
+      @keyframes rise {
+        from {
+          transform: translateY(10px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .topline {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+      .brand {
+        display: flex;
+        gap: 10px;
+        align-items: baseline;
+        flex-wrap: wrap;
+      }
+      .brand h1 {
+        margin: 0;
+        font-family: var(--display);
+        font-weight: 760;
+        letter-spacing: 0.2px;
+        font-size: 26px;
+        line-height: 1.05;
+      }
+      .sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+      .pill {
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 6px 10px;
+        border: 1px solid rgba(30, 42, 38, 0.14);
+        background: rgba(255, 255, 255, 0.55);
+        border-radius: 999px;
+        color: rgba(30, 42, 38, 0.70);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 10px 18px 26px;
+      }
+      @media (min-width: 980px) {
+        .grid {
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 16px;
+        }
+      }
+
+      .card {
+        border: 1px solid rgba(30, 42, 38, 0.10);
+        background: linear-gradient(180deg, var(--card), var(--card2));
+        border-radius: var(--radius);
+        padding: 14px;
+        box-shadow: 0 10px 30px rgba(30, 42, 38, 0.08);
+      }
+      .card h2 {
+        margin: 0 0 10px 0;
+        font-size: 13px;
+        letter-spacing: 0.24px;
+        text-transform: uppercase;
+        color: rgba(30, 42, 38, 0.62);
+        font-weight: 720;
+      }
+      .card h3 {
+        margin: 0 0 8px 0;
+        font-size: 16px;
+        letter-spacing: 0.1px;
+        font-weight: 760;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      @media (min-width: 720px) {
+        .row.cols2 {
+          grid-template-columns: 1fr 1fr;
+        }
+        .row.cols3 {
+          grid-template-columns: 1fr 1fr 1fr;
+        }
+      }
+
+      label {
+        display: block;
+        font-size: 12px;
+        color: rgba(30, 42, 38, 0.68);
+        margin: 0 0 6px 2px;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: var(--radius2);
+        border: 1px solid rgba(30, 42, 38, 0.18);
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--ink);
+        outline: none;
+      }
+      input::placeholder {
+        color: rgba(30, 42, 38, 0.42);
+      }
+      input:focus,
+      select:focus {
+        border-color: rgba(47, 125, 74, 0.55);
+        box-shadow: 0 0 0 3px rgba(47, 125, 74, 0.14);
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 10px;
+      }
+      button {
+        border: 1px solid rgba(30, 42, 38, 0.18);
+        background: linear-gradient(180deg, rgba(47, 125, 74, 0.92), rgba(47, 125, 74, 0.80));
+        color: #fff;
+        padding: 10px 12px;
+        border-radius: var(--radius2);
+        cursor: pointer;
+        font-weight: 760;
+        letter-spacing: 0.1px;
+      }
+      button.secondary {
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--ink);
+      }
+      button.danger {
+        background: linear-gradient(180deg, rgba(197, 57, 57, 0.94), rgba(197, 57, 57, 0.82));
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+
+      .statusline {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 10px 12px;
+        border-radius: var(--radius2);
+        border: 1px solid rgba(30, 42, 38, 0.12);
+        background: rgba(255, 255, 255, 0.70);
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--warn);
+        box-shadow: 0 0 0 6px rgba(182, 129, 28, 0.12);
+      }
+      .dot.good {
+        background: var(--good);
+        box-shadow: 0 0 0 6px rgba(31, 138, 84, 0.12);
+      }
+      .dot.bad {
+        background: var(--bad);
+        box-shadow: 0 0 0 6px rgba(197, 57, 57, 0.12);
+      }
+      .kv {
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: rgba(30, 42, 38, 0.72);
+      }
+
+      .hint {
+        color: rgba(30, 42, 38, 0.70);
+        font-size: 12px;
+        line-height: 1.45;
+        margin-top: 8px;
+      }
+      .hint code {
+        font-family: var(--mono);
+        color: var(--ink);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(30, 42, 38, 0.14);
+        background: rgba(255, 255, 255, 0.72);
+        color: rgba(30, 42, 38, 0.76);
+      }
+      .badge .b {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--warn);
+      }
+      .badge.good .b {
+        background: var(--good);
+      }
+      .badge.bad .b {
+        background: var(--bad);
+      }
+      .badge.muted .b {
+        background: rgba(30, 42, 38, 0.35);
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .summary .line {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: var(--radius2);
+        border: 1px solid rgba(30, 42, 38, 0.12);
+        background: rgba(255, 255, 255, 0.70);
+      }
+      .summary .k {
+        color: rgba(30, 42, 38, 0.62);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.22px;
+        font-weight: 720;
+      }
+      .summary .v {
+        font-weight: 760;
+        letter-spacing: 0.1px;
+      }
+
+      details > summary {
+        list-style: none;
+        cursor: pointer;
+        user-select: none;
+        padding: 10px 12px;
+        border-radius: var(--radius2);
+        border: 1px solid rgba(30, 42, 38, 0.12);
+        background: rgba(255, 255, 255, 0.62);
+        color: rgba(30, 42, 38, 0.82);
+        font-weight: 760;
+      }
+      details > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .out {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: var(--radius);
+        border: 1px solid rgba(30, 42, 38, 0.14);
+        background: rgba(30, 42, 38, 0.05);
+        font-family: var(--mono);
+        font-size: 12px;
+        line-height: 1.4;
+        overflow: auto;
+        max-height: 320px;
+        white-space: pre-wrap;
+      }
+
+      .toast {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        width: min(420px, calc(100vw - 32px));
+        display: grid;
+        gap: 10px;
+        z-index: 50;
+      }
+      .toast .t {
+        border-radius: var(--radius);
+        border: 1px solid rgba(30, 42, 38, 0.14);
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 18px 55px rgba(30, 42, 38, 0.18);
+        padding: 12px 12px;
+        display: grid;
+        gap: 4px;
+        animation: pop 160ms ease-out both;
+      }
+      @keyframes pop {
+        from {
+          transform: translateY(6px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      .toast .t .k {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: rgba(30, 42, 38, 0.62);
+      }
+      .toast .t .m {
+        font-size: 13px;
+        line-height: 1.35;
+        font-weight: 650;
+        color: rgba(30, 42, 38, 0.92);
+      }
+      .toast .t.good {
+        border-color: rgba(31, 138, 84, 0.28);
+      }
+      .toast .t.bad {
+        border-color: rgba(197, 57, 57, 0.28);
+      }
+
+      .sep {
+        height: 1px;
+        background: rgba(30, 42, 38, 0.10);
+        margin: 12px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grain"></div>
+    <header>
+      <div class="wrap">
+        <div class="hero">
+          <div class="topline">
+            <div class="brand">
+              <h1>Rezervace táborů</h1>
+              <span class="pill" id="baseUrlPill"></span>
+            </div>
+            <span class="pill" id="healthPill">health: …</span>
+          </div>
+          <p class="sub">
+            Vyberte tábor, termín a dokončete rezervaci. Admin a diagnostika jsou schované níže (hodí se pro vývoj).
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="grid">
+        <section class="card">
+          <h2>Rezervace</h2>
+          <h3>1) Kontakt</h3>
+          <div class="row cols2">
+            <div>
+              <label for="userEmail">Email</label>
+              <input id="userEmail" placeholder="např. jana.novakova@example.com" inputmode="email" />
+              <div class="hint">Používáme jen pro identifikaci rezervace v téhle demo aplikaci.</div>
+            </div>
+            <div>
+              <label for="userId">ID zákazníka</label>
+              <input id="userId" placeholder="vygeneruje se po ověření emailu" readonly />
+              <div class="hint"><code>Tip:</code> uloží se do prohlížeče, nemusíte ho opisovat.</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" id="ensureUserBtn">Pokračovat</button>
+            <button class="secondary" type="button" id="signOutBtn">Vymazat údaje</button>
+          </div>
+
+          <div class="sep"></div>
+
+          <h3>2) Tábor a termín</h3>
+          <div class="row cols2">
+            <div>
+              <label for="campSelect">Tábor</label>
+              <select id="campSelect" disabled>
+                <option value="">Nejdřív ověřte email</option>
+              </select>
+            </div>
+            <div>
+              <label for="sessionSelect">Termín</label>
+              <select id="sessionSelect" disabled>
+                <option value="">Vyberte tábor</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="secondary" type="button" id="reloadBtn" disabled>Načíst nabídku</button>
+          </div>
+          <div class="hint">
+            Pokud nevidíte žádné tábory, je potřeba je vytvořit v sekci <code>Administrace</code> níže.
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Vaše rezervace</h2>
+          <div class="summary">
+            <div class="line">
+              <div class="k">Tábor</div>
+              <div class="v" id="sumCamp">—</div>
+            </div>
+            <div class="line">
+              <div class="k">Termín</div>
+              <div class="v" id="sumSession">—</div>
+            </div>
+            <div class="line">
+              <div class="k">Cena</div>
+              <div class="v" id="sumPrice">—</div>
+            </div>
+            <div class="line">
+              <div class="k">Stav</div>
+              <div class="v">
+                <span class="badge muted" id="statusBadge"><span class="b"></span><span id="statusText">—</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="row cols2">
+            <div>
+              <label for="reservationId">ID rezervace</label>
+              <input id="reservationId" placeholder="vygeneruje se po vytvoření" />
+            </div>
+            <div>
+              <label for="reservationStatus">Status (raw)</label>
+              <input id="reservationStatus" placeholder="auto" readonly />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" id="createReservationBtn" disabled>Vytvořit rezervaci</button>
+            <button type="button" id="confirmReservationBtn" class="secondary" disabled>Potvrdit</button>
+            <button type="button" id="payReservationBtn" class="secondary" disabled>Zaplatit</button>
+            <button type="button" id="cancelReservationBtn" class="danger" disabled>Zrušit</button>
+            <button type="button" id="refreshReservationBtn" class="secondary" disabled>Obnovit</button>
+          </div>
+
+          <div class="hint">
+            <code>Vytvořit</code> = rezervace se založí. <code>Potvrdit</code> kontroluje kapacitu. <code>Zaplatit</code>
+            je finální stav. Zaplacenou rezervaci už nejde zrušit.
+          </div>
+
+          <div style="height: 12px"></div>
+
+          <details>
+            <summary>Administrace (vývoj)</summary>
+            <div style="height: 10px"></div>
+            <h2 style="margin: 0 0 10px 0">Administrace</h2>
+            <div class="row cols3">
+              <div>
+                <label for="campName">Název tábora</label>
+                <input id="campName" placeholder="Např. Příměšťák: robotika" />
+              </div>
+              <div>
+                <label for="campPrice">Základní cena (Kč)</label>
+                <input id="campPrice" inputmode="decimal" placeholder="2490" />
+              </div>
+              <div>
+                <label for="campId">ID tábora</label>
+                <input id="campId" placeholder="vygeneruje se po vytvoření" readonly />
+              </div>
+            </div>
+            <div class="actions">
+              <button type="button" id="createCampBtn">Vytvořit tábor</button>
+            </div>
+
+            <div style="height: 12px"></div>
+            <div class="row cols3">
+              <div>
+                <label for="sessionStart">Začátek (YYYY-MM-DD)</label>
+                <input id="sessionStart" placeholder="2026-05-01" />
+              </div>
+              <div>
+                <label for="sessionEnd">Konec (YYYY-MM-DD)</label>
+                <input id="sessionEnd" placeholder="2026-05-07" />
+              </div>
+              <div>
+                <label for="sessionCapacity">Kapacita</label>
+                <input id="sessionCapacity" inputmode="numeric" placeholder="10" />
+              </div>
+            </div>
+            <div class="row cols2" style="margin-top: 10px">
+              <div>
+                <label for="sessionId">ID termínu</label>
+                <input id="sessionId" placeholder="vygeneruje se po vytvoření" readonly />
+              </div>
+              <div></div>
+            </div>
+            <div class="actions">
+              <button type="button" id="createSessionBtn">Vytvořit termín</button>
+              <button class="secondary" type="button" id="adminReloadBtn">Obnovit nabídku</button>
+            </div>
+            <div class="hint">
+              Admin volání posílají hlavičku <code>X-Actor-Role: ADMIN</code>. Tahle sekce je schválně schovaná.
+            </div>
+          </details>
+
+          <div style="height: 12px"></div>
+          <details>
+            <summary>Diagnostika (vývoj)</summary>
+            <div style="height: 10px"></div>
+            <div class="statusline">
+              <div class="dot" id="healthDot"></div>
+              <div class="kv">
+                <span>health:</span>
+                <span id="healthText">unknown</span>
+              </div>
+              <button class="secondary" id="refreshHealthBtn" type="button">Obnovit</button>
+              <button class="secondary" type="button" id="clearBtn">Vyčistit log</button>
+            </div>
+            <div class="hint">
+              Pokud to běží v profilu <code>local</code>, typicky jsi na portu <code>8081</code>.
+            </div>
+            <div class="out" id="out"></div>
+          </details>
+        </section>
+      </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const out = document.getElementById("out");
+      const toastRoot = document.getElementById("toast");
+
+      const czk = new Intl.NumberFormat("cs-CZ", { style: "currency", currency: "CZK" });
+      const baseUrl = window.location.origin;
+      document.getElementById("baseUrlPill").textContent = baseUrl;
+
+      const LS = {
+        email: "rc_email",
+        userId: "rc_user_id",
+        reservationId: "rc_reservation_id",
+        campId: "rc_camp_id",
+        sessionId: "rc_session_id"
+      };
+
+      const state = {
+        userId: null,
+        email: null,
+        campId: null,
+        sessionId: null,
+        reservationId: null,
+        camps: [],
+        sessions: [],
+        health: "…"
+      };
+
+      function now() {
+        return new Date().toISOString();
+      }
+
+      function write(kind, payload) {
+        const text = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+        out.textContent = `[${now()}] ${kind}\n${text}\n\n` + out.textContent;
+      }
+
+      function toast(kind, msg, meta) {
+        const el = document.createElement("div");
+        el.className = `t ${kind || ""}`.trim();
+        el.innerHTML = `<div class="k"></div><div class="m"></div>`;
+        el.querySelector(".k").textContent = meta ? meta : "reservationCamps";
+        el.querySelector(".m").textContent = msg;
+        toastRoot.prepend(el);
+        window.setTimeout(() => el.remove(), 5200);
+      }
+
+      function setVal(id, v) {
+        document.getElementById(id).value = v ?? "";
+      }
+      function getVal(id) {
+        return document.getElementById(id).value.trim();
+      }
+
+      function setBadge(status) {
+        const badge = document.getElementById("statusBadge");
+        const txt = document.getElementById("statusText");
+        badge.classList.remove("good", "bad", "muted");
+
+        if (!status) {
+          badge.classList.add("muted");
+          txt.textContent = "—";
+          return;
+        }
+
+        txt.textContent = status;
+        if (status === "PAID") badge.classList.add("good");
+        else if (status === "CANCELLED") badge.classList.add("bad");
+        else badge.classList.add("muted");
+      }
+
+      function setSummary({ campName, sessionLabel, priceCents }) {
+        document.getElementById("sumCamp").textContent = campName || "—";
+        document.getElementById("sumSession").textContent = sessionLabel || "—";
+        document.getElementById("sumPrice").textContent =
+          typeof priceCents === "number" ? czk.format(priceCents / 100) : "—";
+      }
+
+      async function request(method, path, body, headers) {
+        const h = Object.assign({ "Content-Type": "application/json" }, headers || {});
+        const init = { method, headers: h };
+        if (body !== undefined) init.body = JSON.stringify(body);
+
+        const res = await fetch(path, init);
+        const contentType = res.headers.get("content-type") || "";
+        const isJson = contentType.includes("application/json");
+        const data = isJson ? await res.json() : await res.text();
+
+        if (!res.ok) {
+          throw { status: res.status, data };
+        }
+        return data;
+      }
+
+      function niceError(e) {
+        if (!e) return "Nastala chyba.";
+        if (typeof e === "string") return e;
+        if (e.data && typeof e.data === "object" && e.data.message) return e.data.message;
+        if (e.data && typeof e.data === "string") return e.data;
+        return `Nastala chyba${e.status ? ` (HTTP ${e.status})` : ""}.`;
+      }
+
+      function setEnabled(id, on) {
+        document.getElementById(id).disabled = !on;
+      }
+
+      function persist() {
+        if (state.email) localStorage.setItem(LS.email, state.email);
+        if (state.userId) localStorage.setItem(LS.userId, state.userId);
+        if (state.reservationId) localStorage.setItem(LS.reservationId, state.reservationId);
+        if (state.campId) localStorage.setItem(LS.campId, state.campId);
+        if (state.sessionId) localStorage.setItem(LS.sessionId, state.sessionId);
+      }
+
+      function clearPersisted() {
+        Object.values(LS).forEach((k) => localStorage.removeItem(k));
+      }
+
+      function restore() {
+        state.email = localStorage.getItem(LS.email) || null;
+        state.userId = localStorage.getItem(LS.userId) || null;
+        state.reservationId = localStorage.getItem(LS.reservationId) || null;
+        state.campId = localStorage.getItem(LS.campId) || null;
+        state.sessionId = localStorage.getItem(LS.sessionId) || null;
+
+        if (state.email) setVal("userEmail", state.email);
+        if (state.userId) setVal("userId", state.userId);
+        if (state.reservationId) setVal("reservationId", state.reservationId);
+      }
+
+      async function refreshHealth() {
+        const dot = document.getElementById("healthDot");
+        const txt = document.getElementById("healthText");
+        const pill = document.getElementById("healthPill");
+        dot.classList.remove("good", "bad");
+        txt.textContent = "loading";
+        try {
+          const data = await request("GET", "/actuator/health");
+          const status = data && data.status ? data.status : "UNKNOWN";
+          state.health = status;
+          txt.textContent = status;
+          pill.textContent = `health: ${status}`;
+          dot.classList.add(status === "UP" ? "good" : "bad");
+        } catch (e) {
+          state.health = "DOWN";
+          txt.textContent = "DOWN";
+          pill.textContent = "health: DOWN";
+          dot.classList.add("bad");
+          write("health-error", e);
+        }
+      }
+
+      function fillSelect(el, items, getValue, getLabel, placeholder) {
+        el.innerHTML = "";
+        const ph = document.createElement("option");
+        ph.value = "";
+        ph.textContent = placeholder || "—";
+        el.appendChild(ph);
+        for (const it of items) {
+          const opt = document.createElement("option");
+          opt.value = getValue(it);
+          opt.textContent = getLabel(it);
+          el.appendChild(opt);
+        }
+      }
+
+      async function loadCamps() {
+        state.camps = await request("GET", "/api/camps");
+        const campSelect = document.getElementById("campSelect");
+        fillSelect(
+          campSelect,
+          state.camps,
+          (c) => c.id,
+          (c) => `${c.name} (${czk.format(c.basePriceCents / 100)})`,
+          state.camps.length ? "Vyberte tábor" : "Zatím žádné tábory"
+        );
+      }
+
+      async function loadSessions(campId) {
+        state.sessions = await request("GET", `/api/camps/${encodeURIComponent(campId)}/sessions`);
+        const sessionSelect = document.getElementById("sessionSelect");
+        fillSelect(
+          sessionSelect,
+          state.sessions,
+          (s) => s.id,
+          (s) => `${s.startDate} až ${s.endDate} (kapacita ${s.capacity})`,
+          state.sessions.length ? "Vyberte termín" : "Zatím žádné termíny"
+        );
+      }
+
+      function syncSummaryFromSelection() {
+        const camp = state.camps.find((c) => c.id === state.campId) || null;
+        const session = state.sessions.find((s) => s.id === state.sessionId) || null;
+        setSummary({
+          campName: camp ? camp.name : null,
+          sessionLabel: session ? `${session.startDate} až ${session.endDate}` : null,
+          priceCents: camp ? camp.basePriceCents : null
+        });
+      }
+
+      function syncReservationActions(status) {
+        setEnabled("createReservationBtn", !!state.userId && !!state.sessionId);
+        setEnabled("refreshReservationBtn", !!getVal("reservationId"));
+        setEnabled("confirmReservationBtn", status === "CREATED");
+        setEnabled("payReservationBtn", status === "CONFIRMED");
+        setEnabled("cancelReservationBtn", status && status !== "CANCELLED" && status !== "PAID");
+      }
+
+      async function ensureUser() {
+        const email = getVal("userEmail");
+        if (!email) {
+          toast("bad", "Zadejte email.");
+          return;
+        }
+
+        setEnabled("ensureUserBtn", false);
+        try {
+          let user;
+          try {
+            user = await request("GET", `/api/users/by-email?email=${encodeURIComponent(email)}`);
+            write("user-by-email", user);
+          } catch (e) {
+            if (e.status !== 404) throw e;
+            const created = await request("POST", "/api/users", { email });
+            write("user-created", created);
+            user = { id: created.id, email };
+          }
+
+          state.email = email.trim().toLowerCase();
+          state.userId = user.id;
+          setVal("userId", user.id);
+          persist();
+          toast("good", "Email ověřen. Můžete vybrat tábor.");
+
+          setEnabled("campSelect", true);
+          setEnabled("reloadBtn", true);
+          await loadCamps();
+
+          if (state.campId && state.camps.some((c) => c.id === state.campId)) {
+            document.getElementById("campSelect").value = state.campId;
+            await onCampChanged();
+          }
+        } catch (e) {
+          write("ensure-user-error", e);
+          toast("bad", niceError(e), "Uživatel");
+        } finally {
+          setEnabled("ensureUserBtn", true);
+        }
+      }
+
+      async function onCampChanged() {
+        const campId = getVal("campSelect");
+        state.campId = campId || null;
+        state.sessionId = null;
+        document.getElementById("sessionSelect").value = "";
+        persist();
+
+        setEnabled("sessionSelect", !!campId);
+        if (!campId) {
+          state.sessions = [];
+          fillSelect(document.getElementById("sessionSelect"), [], (x) => x, (x) => x, "Vyberte tábor");
+          syncSummaryFromSelection();
+          syncReservationActions(getVal("reservationStatus"));
+          return;
+        }
+
+        try {
+          await loadSessions(campId);
+          syncSummaryFromSelection();
+          syncReservationActions(getVal("reservationStatus"));
+        } catch (e) {
+          write("sessions-load-error", e);
+          toast("bad", niceError(e), "Termíny");
+        }
+      }
+
+      async function onSessionChanged() {
+        const sessionId = getVal("sessionSelect");
+        state.sessionId = sessionId || null;
+        persist();
+        syncSummaryFromSelection();
+        syncReservationActions(getVal("reservationStatus"));
+      }
+
+      async function reloadOffer() {
+        try {
+          await loadCamps();
+          if (state.campId) {
+            document.getElementById("campSelect").value = state.campId;
+            await onCampChanged();
+          }
+          toast("good", "Nabídka obnovena.");
+        } catch (e) {
+          write("offer-load-error", e);
+          toast("bad", niceError(e), "Nabídka");
+        }
+      }
+
+      async function refreshReservation() {
+        const reservationId = getVal("reservationId");
+        if (!reservationId) return;
+        try {
+          const data = await request("GET", `/api/reservations/${encodeURIComponent(reservationId)}`);
+          write("reservation-get", data);
+          state.reservationId = data.id;
+          setVal("reservationId", data.id);
+          setVal("reservationStatus", data.status);
+          setBadge(data.status);
+          persist();
+          syncReservationActions(data.status);
+        } catch (e) {
+          write("reservation-get-error", e);
+          toast("bad", niceError(e), "Rezervace");
+        }
+      }
+
+      async function createReservation() {
+        if (!state.userId) {
+          toast("bad", "Nejdřív ověřte email.");
+          return;
+        }
+        const sessionId = state.sessionId;
+        if (!sessionId) {
+          toast("bad", "Vyberte termín.");
+          return;
+        }
+        try {
+          const data = await request("POST", `/api/sessions/${encodeURIComponent(sessionId)}/reservations`, {
+            userId: state.userId
+          });
+          write("reservation-created", data);
+          state.reservationId = data.id;
+          setVal("reservationId", data.id);
+          setVal("reservationStatus", data.status);
+          setBadge(data.status);
+          persist();
+          syncReservationActions(data.status);
+          toast("good", "Rezervace vytvořena.");
+        } catch (e) {
+          write("reservation-create-error", e);
+          toast("bad", niceError(e), "Rezervace");
+        }
+      }
+
+      async function confirmReservation() {
+        const reservationId = getVal("reservationId");
+        if (!reservationId) return;
+        try {
+          const data = await request("POST", `/api/reservations/${encodeURIComponent(reservationId)}/confirm`);
+          write("reservation-confirmed", data);
+          setVal("reservationStatus", data.status);
+          setBadge(data.status);
+          persist();
+          syncReservationActions(data.status);
+          toast("good", "Rezervace potvrzena.");
+        } catch (e) {
+          write("reservation-confirm-error", e);
+          toast("bad", niceError(e), "Rezervace");
+        }
+      }
+
+      async function payReservation() {
+        const reservationId = getVal("reservationId");
+        if (!reservationId) return;
+        try {
+          const data = await request("POST", `/api/reservations/${encodeURIComponent(reservationId)}/pay`);
+          write("reservation-paid", data);
+          setVal("reservationStatus", data.status);
+          setBadge(data.status);
+          persist();
+          syncReservationActions(data.status);
+          toast("good", "Platba přijata.");
+        } catch (e) {
+          write("reservation-pay-error", e);
+          toast("bad", niceError(e), "Rezervace");
+        }
+      }
+
+      async function cancelReservation() {
+        const reservationId = getVal("reservationId");
+        if (!reservationId) return;
+        try {
+          const data = await request("POST", `/api/reservations/${encodeURIComponent(reservationId)}/cancel`);
+          write("reservation-cancelled", data);
+          setVal("reservationStatus", data.status);
+          setBadge(data.status);
+          persist();
+          syncReservationActions(data.status);
+          toast("good", "Rezervace zrušena.");
+        } catch (e) {
+          write("reservation-cancel-error", e);
+          toast("bad", niceError(e), "Rezervace");
+        }
+      }
+
+      async function createCamp() {
+        const name = getVal("campName");
+        const priceKc = Number(String(getVal("campPrice")).replace(",", "."));
+        const basePriceCents = Math.round(priceKc * 100);
+        try {
+          const data = await request("POST", "/api/camps", { name, basePriceCents }, { "X-Actor-Role": "ADMIN" });
+          setVal("campId", data.id);
+          write("camp-created", data);
+          toast("good", "Tábor vytvořen (admin).");
+          await reloadOffer();
+        } catch (e) {
+          write("camp-create-error", e);
+          toast("bad", niceError(e), "Admin");
+        }
+      }
+
+      async function createSession() {
+        const campId = getVal("campId") || getVal("campSelect");
+        const startDate = getVal("sessionStart");
+        const endDate = getVal("sessionEnd");
+        const capacity = Number(getVal("sessionCapacity"));
+        try {
+          const data = await request(
+            "POST",
+            `/api/camps/${encodeURIComponent(campId)}/sessions`,
+            { startDate, endDate, capacity },
+            { "X-Actor-Role": "ADMIN" }
+          );
+          setVal("sessionId", data.id);
+          write("session-created", data);
+          toast("good", "Termín vytvořen (admin).");
+          await reloadOffer();
+        } catch (e) {
+          write("session-create-error", e);
+          toast("bad", niceError(e), "Admin");
+        }
+      }
+
+      document.getElementById("ensureUserBtn").addEventListener("click", ensureUser);
+      document.getElementById("signOutBtn").addEventListener("click", () => {
+        clearPersisted();
+        state.userId = null;
+        state.email = null;
+        state.campId = null;
+        state.sessionId = null;
+        state.reservationId = null;
+        state.camps = [];
+        state.sessions = [];
+
+        setVal("userEmail", "");
+        setVal("userId", "");
+        setVal("reservationId", "");
+        setVal("reservationStatus", "");
+        setBadge(null);
+        setSummary({ campName: null, sessionLabel: null, priceCents: null });
+
+        const campSelect = document.getElementById("campSelect");
+        const sessionSelect = document.getElementById("sessionSelect");
+        fillSelect(campSelect, [], (x) => x, (x) => x, "Nejdřív ověřte email");
+        fillSelect(sessionSelect, [], (x) => x, (x) => x, "Vyberte tábor");
+        setEnabled("campSelect", false);
+        setEnabled("sessionSelect", false);
+        setEnabled("reloadBtn", false);
+        syncReservationActions(null);
+        toast("good", "Údaje vymazány.");
+      });
+
+      document.getElementById("campSelect").addEventListener("change", onCampChanged);
+      document.getElementById("sessionSelect").addEventListener("change", onSessionChanged);
+      document.getElementById("reloadBtn").addEventListener("click", reloadOffer);
+      document.getElementById("adminReloadBtn").addEventListener("click", reloadOffer);
+
+      document.getElementById("createReservationBtn").addEventListener("click", createReservation);
+      document.getElementById("confirmReservationBtn").addEventListener("click", confirmReservation);
+      document.getElementById("payReservationBtn").addEventListener("click", payReservation);
+      document.getElementById("cancelReservationBtn").addEventListener("click", cancelReservation);
+      document.getElementById("refreshReservationBtn").addEventListener("click", refreshReservation);
+
+      document.getElementById("createCampBtn").addEventListener("click", createCamp);
+      document.getElementById("createSessionBtn").addEventListener("click", createSession);
+
+      document.getElementById("refreshHealthBtn").addEventListener("click", refreshHealth);
+      document.getElementById("clearBtn").addEventListener("click", () => (out.textContent = ""));
+
+      document.getElementById("reservationId").addEventListener("change", () => {
+        const v = getVal("reservationId");
+        if (v) {
+          state.reservationId = v;
+          persist();
+          setEnabled("refreshReservationBtn", true);
+        }
+      });
+
+      restore();
+      setBadge(getVal("reservationStatus"));
+      syncReservationActions(getVal("reservationStatus"));
+      setEnabled("campSelect", !!state.userId);
+      setEnabled("reloadBtn", !!state.userId);
+      setEnabled("sessionSelect", false);
+      setSummary({ campName: null, sessionLabel: null, priceCents: null });
+
+      refreshHealth();
+      if (state.userId) reloadOffer().catch((e) => write("offer-restore-error", e));
+      if (state.reservationId) refreshReservation().catch((e) => write("reservation-restore-error", e));
+    </script>
+  </body>
+</html>
+

@@ -6,6 +6,7 @@ import com.onnick.reservationcamps.domain.error.BusinessRuleViolationException;
 import com.onnick.reservationcamps.domain.repo.AppUserRepository;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,5 +38,16 @@ public class UserService {
         var user = new AppUser(UUID.randomUUID(), normalized, role, Instant.now(clock));
         return userRepository.save(user);
     }
-}
 
+    @Transactional(readOnly = true)
+    public Optional<AppUser> findByEmail(String email) {
+        if (email == null) {
+            return Optional.empty();
+        }
+        var normalized = email.trim().toLowerCase();
+        if (normalized.isBlank()) {
+            return Optional.empty();
+        }
+        return userRepository.findByEmail(normalized);
+    }
+}

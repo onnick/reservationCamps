@@ -7,6 +7,7 @@ import com.onnick.reservationcamps.service.ReservationService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,6 +22,11 @@ public class ReservationController {
 
     public ReservationController(ReservationService reservationService) {
         this.reservationService = reservationService;
+    }
+
+    @GetMapping("/reservations/{reservationId}")
+    public ReservationResponse get(@PathVariable UUID reservationId) {
+        return toResponse(reservationService.getReservation(reservationId));
     }
 
     @PostMapping("/sessions/{sessionId}/reservations")

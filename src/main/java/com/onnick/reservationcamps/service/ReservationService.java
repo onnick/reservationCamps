@@ -150,10 +150,16 @@ public class ReservationService {
         return reservationRepository.save(reservation);
     }
 
+    @Transactional(readOnly = true)
+    public Reservation getReservation(UUID reservationId) {
+        return reservationRepository
+                .findById(reservationId)
+                .orElseThrow(() -> new NotFoundException("Reservation not found: " + reservationId));
+    }
+
     private long confirmedOrPaidCount(UUID sessionId) {
         var confirmed = reservationRepository.countBySessionIdAndStatus(sessionId, ReservationStatus.CONFIRMED);
         var paid = reservationRepository.countBySessionIdAndStatus(sessionId, ReservationStatus.PAID);
         return confirmed + paid;
     }
 }
-
