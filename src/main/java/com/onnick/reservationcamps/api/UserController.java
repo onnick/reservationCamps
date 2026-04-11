@@ -41,8 +41,8 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public IdResponse create(@Valid @RequestBody CreateUserRequest request) {
-        var role = request.role() == null ? UserRole.CUSTOMER : request.role();
-        var user = userService.createUser(request.email(), request.password(), role);
+        // Security note: end users cannot self-assign ADMIN via request body.
+        var user = userService.createUser(request.email(), request.password(), UserRole.CUSTOMER);
         return new IdResponse(user.getId());
     }
 

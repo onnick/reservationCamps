@@ -14,6 +14,14 @@ spring:
     hibernate:
       ddl-auto: validate
 
+# Create a local ADMIN user on startup (if it doesn't exist).
+bootstrap:
+  admin:
+    email: admin@admin.cz
+    # Doporučení: nenechávat hesla v repozitáři. Nastav přes env:
+    # BOOTSTRAP_ADMIN_PASSWORD=admin
+    password:
+
 management:
   endpoints:
     web:

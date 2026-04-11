@@ -163,7 +163,12 @@ public class ReservationService {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User not found: " + userId);
         }
-        return reservationRepository.findAllByUser_IdOrderByCreatedAtDesc(userId);
+        return reservationRepository.findAllForUserWithJoins(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Reservation> listAllReservations() {
+        return reservationRepository.findAllWithJoins();
     }
 
     private long confirmedOrPaidCount(UUID sessionId) {

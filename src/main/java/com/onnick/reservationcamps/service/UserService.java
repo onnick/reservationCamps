@@ -3,6 +3,8 @@ package com.onnick.reservationcamps.service;
 import com.onnick.reservationcamps.domain.AppUser;
 import com.onnick.reservationcamps.domain.UserRole;
 import com.onnick.reservationcamps.domain.error.BusinessRuleViolationException;
+import com.onnick.reservationcamps.domain.error.ForbiddenException;
+import com.onnick.reservationcamps.domain.error.NotFoundException;
 import com.onnick.reservationcamps.domain.repo.AppUserRepository;
 import java.time.Clock;
 import java.time.Instant;
@@ -68,14 +70,23 @@ public class UserService {
         }
 
         var normalized = email.trim().toLowerCase();
-        var user =
-                userRepository
-                        .findByEmail(normalized)
-                        .orElseThrow(() -> new com.onnick.reservationcamps.domain.error.NotFoundException("User not found."));
+        var user = userRepository.findByEmail(normalized).orElseThrow(() -> new NotFoundException("User not found."));
 
         var hash = user.getPasswordHash();
         if (hash == null || hash.isBlank() || !passwordEncoder.matches(password, hash)) {
-            throw new com.onnick.reservationcamps.domain.error.ForbiddenException("Invalid credentials.");
+            throw new ForbiddenException("Invalid credentials.");
+        }
+        return user;
+    }
+
+    @Transactional(readOnly = true)
+    public AppUser requireAdmin(UUID userId) {
+        if (userId == null) {
+            throw new ForbiddenException("Admin role required.");
+        }
+        var user = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("User not found."));
+        if (user.getRole() != UserRole.ADMIN) {
+            throw new ForbiddenException("Admin role required.");
         }
         return user;
     }

@@ -3,14 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Přihlášení</title>
+    <title>Správa rezervací (Admin)</title>
     <style>
       :root {
         --bg0: #fbf7ee;
         --bg1: #f3efe4;
         --ink: #1e2a26;
         --muted: rgba(30, 42, 38, 0.72);
-        --line: rgba(30, 42, 38, 0.14);
         --card: rgba(255, 255, 255, 0.72);
         --card2: rgba(255, 255, 255, 0.58);
         --shadow: 0 18px 55px rgba(30, 42, 38, 0.13);
@@ -41,7 +40,7 @@
           linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 100%);
       }
       .wrap {
-        max-width: 920px;
+        max-width: 1100px;
         margin: 0 auto;
         padding: 24px 18px 26px;
       }
@@ -90,9 +89,9 @@
         gap: 14px;
         margin-top: 14px;
       }
-      @media (min-width: 920px) {
+      @media (min-width: 980px) {
         .grid {
-          grid-template-columns: 0.9fr 1.1fr;
+          grid-template-columns: 0.8fr 1.2fr;
         }
       }
 
@@ -119,10 +118,12 @@
         margin: 0 0 6px 2px;
       }
       input,
-      button {
+      button,
+      select {
         font: inherit;
       }
-      input {
+      input,
+      select {
         width: 100%;
         padding: 10px 12px;
         border-radius: var(--radius2);
@@ -130,10 +131,6 @@
         background: rgba(255, 255, 255, 0.72);
         color: var(--ink);
         outline: none;
-      }
-      input:focus {
-        border-color: rgba(47, 125, 74, 0.55);
-        box-shadow: 0 0 0 3px rgba(47, 125, 74, 0.14);
       }
 
       .actions {
@@ -156,16 +153,15 @@
         background: rgba(255, 255, 255, 0.72);
         color: var(--ink);
       }
+      button.danger {
+        background: linear-gradient(180deg, rgba(197, 57, 57, 0.94), rgba(197, 57, 57, 0.82));
+      }
 
       .hint {
         color: rgba(30, 42, 38, 0.70);
         font-size: 12px;
         line-height: 1.45;
         margin-top: 8px;
-      }
-      .hint code {
-        font-family: var(--mono);
-        color: var(--ink);
       }
 
       .list {
@@ -178,9 +174,9 @@
         background: rgba(255, 255, 255, 0.70);
         padding: 12px 12px;
         display: grid;
-        gap: 6px;
+        gap: 8px;
       }
-      .item .top {
+      .row {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
@@ -256,20 +252,20 @@
     <div class="wrap">
       <div class="hero">
         <div class="brand">
-          <h1>Přihlášení</h1>
+          <h1>Správa rezervací</h1>
           <span class="pill" id="baseUrlPill"></span>
         </div>
         <p class="sub">
-          Přihlaste se a uvidíte seznam vašich rezervací. Pokud jste admin, přesměrujeme vás na správu rezervací.
+          Admin-only pohled na rezervace. Přístup je přes API s hlavičkou <span class="pill">X-Actor-Role: ADMIN</span>.
         </p>
       </div>
 
       <div class="grid">
         <section class="card">
-          <h2>Účet</h2>
+          <h2>Admin přihlášení</h2>
           <div>
             <label for="email">Email</label>
-            <input id="email" inputmode="email" placeholder="např. jana.novakova@example.com" />
+            <input id="email" inputmode="email" placeholder="admin@example.com" />
           </div>
           <div style="height: 10px"></div>
           <div>
@@ -277,17 +273,23 @@
             <input id="password" type="password" autocomplete="current-password" placeholder="min. 5 znaků" />
           </div>
           <div class="actions">
-            <button type="button" id="loginBtn">Přihlásit</button>
+            <button type="button" id="loginBtn">Přihlásit jako admin</button>
             <button type="button" class="secondary" id="logoutBtn">Odhlásit</button>
+            <a href="/app" class="pill" style="text-decoration: none">Zpět na aplikaci</a>
           </div>
-          <div class="hint">Pokud účet neexistuje, založte ho v aplikaci pro rezervace.</div>
-          <div class="hint mono">Uživatel: <span id="userIdText">—</span></div>
+          <div class="hint mono">Admin ID: <span id="userIdText">—</span></div>
+          <div class="hint">
+            Pozn.: V tomhle demo projektu role není řešená přes JWT/session. Jen ověřujeme, že účet má roli <code>ADMIN</code>.
+          </div>
         </section>
 
         <section class="card">
-          <h2>Moje rezervace</h2>
+          <h2>Rezervace</h2>
+          <div class="actions">
+            <button class="secondary" type="button" id="reloadBtn" disabled>Obnovit</button>
+          </div>
           <div class="list" id="list"></div>
-          <div class="hint" id="emptyHint" style="display: none">Zatím nemáte žádné rezervace.</div>
+          <div class="hint" id="emptyHint" style="display: none">Žádné rezervace.</div>
         </section>
       </div>
     </div>
@@ -296,14 +298,12 @@
 
     <script>
       document.getElementById("baseUrlPill").textContent = window.location.origin;
-
       const toastRoot = document.getElementById("toast");
       const list = document.getElementById("list");
       const emptyHint = document.getElementById("emptyHint");
       const userIdText = document.getElementById("userIdText");
 
-      const LS = { userId: "rc_login_user_id", email: "rc_login_email" };
-      const state = { userId: null };
+      const state = { adminId: null };
 
       function toast(kind, msg, meta) {
         const el = document.createElement("div");
@@ -315,9 +315,9 @@
         window.setTimeout(() => el.remove(), 5200);
       }
 
-      async function request(method, path, body) {
-        const headers = { "Content-Type": "application/json" };
-        const init = { method, headers };
+      async function request(method, path, body, headers) {
+        const h = Object.assign({ "Content-Type": "application/json" }, headers || {});
+        const init = { method, headers: h };
         if (body !== undefined) init.body = JSON.stringify(body);
         const res = await fetch(path, init);
         const contentType = res.headers.get("content-type") || "";
@@ -335,11 +335,10 @@
         return `Nastala chyba${e.status ? ` (HTTP ${e.status})` : ""}.`;
       }
 
-      function setUserId(userId) {
-        state.userId = userId || null;
-        userIdText.textContent = state.userId || "—";
-        if (state.userId) localStorage.setItem(LS.userId, state.userId);
-        else localStorage.removeItem(LS.userId);
+      function setAdminId(id) {
+        state.adminId = id || null;
+        userIdText.textContent = state.adminId || "—";
+        document.getElementById("reloadBtn").disabled = !state.adminId;
       }
 
       function statusClass(s) {
@@ -359,84 +358,87 @@
           const el = document.createElement("div");
           el.className = "item";
           el.innerHTML = `
-            <div class="top">
+            <div class="row">
               <div class="mono">Rezervace: ${r.id}</div>
               <div class="status ${statusClass(r.status)}">${r.status}</div>
             </div>
+            <div class="mono">Uživatel: ${r.userId}</div>
             <div class="mono">Termín (sessionId): ${r.sessionId}</div>
             <div class="mono">Vytvořeno: ${r.createdAt}</div>
-            <div class="mono">
-              <a href="/?reservationId=${encodeURIComponent(r.id)}">Otevřít v aplikaci</a>
+            <div class="actions">
+              <button class="secondary" data-action="confirm" data-id="${r.id}">Confirm</button>
+              <button class="secondary" data-action="pay" data-id="${r.id}">Pay</button>
+              <button class="danger" data-action="cancel" data-id="${r.id}">Cancel</button>
+              <a class="pill" href="/?reservationId=${encodeURIComponent(r.id)}" style="text-decoration:none">Otevřít</a>
             </div>
           `;
           list.appendChild(el);
         }
       }
 
-      async function loadReservations() {
-        if (!state.userId) {
-          render([]);
-          return;
-        }
+      async function loadAll() {
+        if (!state.adminId) return;
         try {
-          const data = await request("GET", `/api/users/${encodeURIComponent(state.userId)}/reservations`);
+          const data = await request("GET", "/api/admin/reservations", undefined, {
+            "X-Actor-Role": "ADMIN",
+            "X-Actor-Id": state.adminId
+          });
           render(data);
         } catch (e) {
-          toast("bad", niceError(e), "Rezervace");
+          toast("bad", niceError(e), "Admin");
           render([]);
         }
       }
 
-      async function login() {
+      async function loginAdmin() {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value;
-        if (!email) {
-          toast("bad", "Zadejte email.", "Přihlášení");
-          return;
-        }
-        if (!password || password.length < 5) {
-          toast("bad", "Zadejte heslo (min. 5 znaků).", "Přihlášení");
-          return;
-        }
-        try {
-          const res = await request("POST", "/api/users/login", { email, password });
-          localStorage.setItem(LS.email, email.toLowerCase());
-          setUserId(res.id);
+        if (!email) return toast("bad", "Zadejte email.", "Admin");
+        if (!password || password.length < 5) return toast("bad", "Zadejte heslo (min. 5 znaků).", "Admin");
 
-          // Determine role (demo approach).
+        try {
+          const login = await request("POST", "/api/users/login", { email, password });
+
+          // Verify role is ADMIN (demo approach).
           const user = await request("GET", `/api/users/by-email?email=${encodeURIComponent(email)}`);
-          if (user && user.role === "ADMIN") {
-            toast("good", "Přihlášeno jako ADMIN. Přesměrovávám…", "Přihlášení");
-            window.location.assign("/app");
+          if (!user || user.role !== "ADMIN") {
+            setAdminId(null);
+            toast("bad", "Tento účet není ADMIN.", "Admin");
             return;
           }
 
-          toast("good", "Přihlášeno.", "Přihlášení");
-          await loadReservations();
+          setAdminId(login.id);
+          toast("good", "Přihlášeno jako ADMIN.", "Admin");
+          await loadAll();
         } catch (e) {
-          toast("bad", niceError(e), "Přihlášení");
+          setAdminId(null);
+          toast("bad", niceError(e), "Admin");
         }
       }
 
       function logout() {
-        localStorage.removeItem(LS.email);
-        setUserId(null);
+        setAdminId(null);
         render([]);
-        toast("good", "Odhlášeno.", "Přihlášení");
+        toast("good", "Odhlášeno.", "Admin");
       }
 
-      document.getElementById("loginBtn").addEventListener("click", login);
+      list.addEventListener("click", async (ev) => {
+        const btn = ev.target.closest("button[data-action]");
+        if (!btn) return;
+        const id = btn.getAttribute("data-id");
+        const action = btn.getAttribute("data-action");
+        try {
+          await request("POST", `/api/reservations/${encodeURIComponent(id)}/${action}`);
+          toast("good", `OK: ${action}`, "Rezervace");
+          await loadAll();
+        } catch (e) {
+          toast("bad", niceError(e), "Rezervace");
+        }
+      });
+
+      document.getElementById("loginBtn").addEventListener("click", loginAdmin);
       document.getElementById("logoutBtn").addEventListener("click", logout);
-
-      // Restore last userId for convenience (still requires real login to be "secure",
-      // but this is a demo app, and we want easy UX for local testing).
-      const lastEmail = localStorage.getItem(LS.email);
-      const lastUserId = localStorage.getItem(LS.userId);
-      if (lastEmail) document.getElementById("email").value = lastEmail;
-      if (lastUserId) {
-        setUserId(lastUserId);
-        loadReservations();
-      }
+      document.getElementById("reloadBtn").addEventListener("click", loadAll);
     </script>
   </body>
 </html>

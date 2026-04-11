@@ -466,7 +466,7 @@
             </div>
             <div>
               <label for="userPassword">Heslo</label>
-              <input id="userPassword" type="password" placeholder="min. 8 znaků" autocomplete="current-password" />
+              <input id="userPassword" type="password" placeholder="min. 5 znaků" autocomplete="current-password" />
               <div class="hint">Ukládá se jen hash do DB (BCrypt). Heslo si neukládáme do prohlížeče.</div>
             </div>
             <div>
@@ -843,8 +843,8 @@
           toast("bad", "Zadejte email.");
           return;
         }
-        if (!password || password.length < 8) {
-          toast("bad", "Zadejte heslo (min. 8 znaků).");
+        if (!password || password.length < 5) {
+          toast("bad", "Zadejte heslo (min. 5 znaků).");
           return;
         }
 
