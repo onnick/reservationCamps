@@ -84,6 +84,23 @@ class ReservationFlowIT {
         assertThat(cancel.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     }
 
+    @Test
+    void reservationsCanBeListedForUser() {
+        var userId = createUser("list@example.com");
+        var campId = createCampAsAdmin("Camp", 1000);
+        var sessionId =
+                createSessionAsAdmin(
+                        campId, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 7), 10);
+
+        createReservation(sessionId, userId);
+
+        var response = http.getForEntity("/api/users/" + userId + "/reservations", ReservationResponse[].class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().length).isGreaterThanOrEqualTo(1);
+        assertThat(response.getBody()[0].userId()).isEqualTo(userId);
+    }
+
     private UUID createUser(String email) {
         var response =
                 post(

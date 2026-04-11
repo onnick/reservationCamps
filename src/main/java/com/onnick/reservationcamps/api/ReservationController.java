@@ -5,6 +5,7 @@ import com.onnick.reservationcamps.api.dto.ReservationResponse;
 import com.onnick.reservationcamps.domain.Reservation;
 import com.onnick.reservationcamps.service.ReservationService;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,11 @@ public class ReservationController {
     @GetMapping("/reservations/{reservationId}")
     public ReservationResponse get(@PathVariable UUID reservationId) {
         return toResponse(reservationService.getReservation(reservationId));
+    }
+
+    @GetMapping("/users/{userId}/reservations")
+    public List<ReservationResponse> listForUser(@PathVariable UUID userId) {
+        return reservationService.listReservationsForUser(userId).stream().map(ReservationController::toResponse).toList();
     }
 
     @PostMapping("/sessions/{sessionId}/reservations")

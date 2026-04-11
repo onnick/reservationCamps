@@ -10,6 +10,7 @@ import com.onnick.reservationcamps.domain.repo.ReservationRepository;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -155,6 +156,14 @@ public class ReservationService {
         return reservationRepository
                 .findById(reservationId)
                 .orElseThrow(() -> new NotFoundException("Reservation not found: " + reservationId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Reservation> listReservationsForUser(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("User not found: " + userId);
+        }
+        return reservationRepository.findAllByUser_IdOrderByCreatedAtDesc(userId);
     }
 
     private long confirmedOrPaidCount(UUID sessionId) {

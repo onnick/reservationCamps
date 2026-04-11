@@ -39,3 +39,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Local profile file-based H2 database
+data/

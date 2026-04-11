@@ -7,6 +7,8 @@ services:
       POSTGRES_PASSWORD: reservationcamps
     ports:
       - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U reservationcamps -d reservationcamps"]
       interval: 5s
@@ -26,3 +28,5 @@ services:
     ports:
       - "8080:8080"
 
+volumes:
+  db-data:

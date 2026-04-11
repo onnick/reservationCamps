@@ -1139,6 +1139,21 @@
 
       refreshHealth();
       if (state.reservationId) refreshReservation().catch((e) => write("reservation-restore-error", e));
+
+      // Support deep-link: /?reservationId=<id>
+      try {
+        const url = new URL(window.location.href);
+        const rid = url.searchParams.get("reservationId");
+        if (rid && !getVal("reservationId")) {
+          setVal("reservationId", rid);
+          state.reservationId = rid;
+          persist();
+          setEnabled("refreshReservationBtn", true);
+          refreshReservation().catch((e) => write("reservation-restore-error", e));
+        }
+      } catch (e) {
+        // ignore URL parsing issues
+      }
     </script>
   </body>
 </html>
