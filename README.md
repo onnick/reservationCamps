@@ -1,30 +1,30 @@
 # reservationCamps
 
-Spring Boot REST API for camp reservations.
+Spring Boot REST API pro rezervace táborů.
 
-## Domain
-Entities:
+## Doména
+Entity:
 - `AppUser` (role: `ADMIN` or `CUSTOMER`)
 - `Camp`
-- `CampSession` (capacity, date range)
-- `Reservation` (status lifecycle)
+- `CampSession` (kapacita, rozsah dat)
+- `Reservation` (životní cyklus stavu)
 
-Business rules (examples):
-- session cannot be created in the past
-- reservation cannot be created/confirmed/cancelled after session start
-- reservation is unique per (user, session)
-- confirm respects session capacity
-- only `CREATED` can be confirmed; only `CONFIRMED` can be paid; `PAID` cannot be cancelled
+Business pravidla (příklady):
+- termín nelze vytvořit v minulosti
+- rezervaci nelze vytvořit/potvrdit/zrušit po začátku termínu
+- rezervace je unikátní pro dvojici (uživatel, termín)
+- potvrzení rezervace respektuje kapacitu termínu
+- pouze `CREATED` lze potvrdit; pouze `CONFIRMED` lze zaplatit; `PAID` nelze zrušit
 
-## Run Locally
-Requirements: Java 21+, Docker (optional but recommended).
+## Spuštění lokálně
+Požadavky: Java 21+, Docker (volitelně, ale doporučeno).
 
-Run with Docker Compose (app + PostgreSQL):
+Spuštění přes Docker Compose (aplikace + PostgreSQL):
 ```bash
 docker compose up --build
 ```
 
-Run directly (needs PostgreSQL running):
+Spuštění přímo (je potřeba běžící PostgreSQL):
 ```bash
 export DB_URL=jdbc:postgresql://localhost:5432/reservationcamps
 export DB_USERNAME=reservationcamps
@@ -32,7 +32,7 @@ export DB_PASSWORD=reservationcamps
 mvn -B spring-boot:run
 ```
 
-Run without PostgreSQL (in-memory H2, profile `local`, port 8081):
+Spuštění bez PostgreSQL (in-memory H2, profil `local`, port 8081):
 ```bash
 mvn -B clean spring-boot:run -Dspring-boot.run.profiles=local
 ```
@@ -42,22 +42,22 @@ Health:
 curl -fsS http://localhost:8080/actuator/health
 ```
 
-Local profile health:
+Health v profilu `local`:
 ```bash
 curl -fsS http://localhost:8081/actuator/health
 ```
 
 ## API
-Admin endpoints require header `X-Actor-Role: ADMIN`.
+Admin endpointy vyžadují hlavičku `X-Actor-Role: ADMIN`.
 
-Create user:
+Vytvoření uživatele:
 ```bash
 curl -sS -X POST http://localhost:8080/api/users \
   -H 'Content-Type: application/json' \
   -d '{"email":"a@example.com"}'
 ```
 
-Create camp:
+Vytvoření tábora:
 ```bash
 curl -sS -X POST http://localhost:8080/api/camps \
   -H 'Content-Type: application/json' \
@@ -65,48 +65,48 @@ curl -sS -X POST http://localhost:8080/api/camps \
   -d '{"name":"Camp","basePriceCents":1000}'
 ```
 
-## Architecture
-The application follows a simple layered architecture:
-- API layer: REST controllers in `src/main/java/.../api` expose HTTP endpoints and map requests/responses.
-- Application/domain logic: services in `src/main/java/.../service` implement business rules (state transitions, capacity checks, role checks, duplicate prevention).
-- Persistence: JPA entities in `src/main/java/.../domain` and Spring Data repositories in `src/main/java/.../domain/repo` store data in a relational database.
-- Migrations: Flyway migrations in `src/main/resources/db/migration` (and `db/migration/h2` for the `local` profile) keep schema versioned.
-- Error handling: `ApiExceptionHandler` converts domain exceptions to consistent HTTP responses (`403/404/409` + `ApiError`); request body validation errors are `400`.
-- Actor/role resolution: `ActorResolver` reads request headers (`X-Actor-Role`, optional `X-Actor-Id`) to authorize admin-only operations.
-- UI: a minimal static page is served from `src/main/resources/static/index.html` as a lightweight client for the API (admin/diagnostics are intentionally hidden).
+## Architektura
+Aplikace má jednoduchou vrstvenou architekturu:
+- API vrstva: REST controllery v `src/main/java/.../api` vystavují HTTP endpointy a mapují request/response.
+- Aplikační/doménová logika: služby v `src/main/java/.../service` implementují business pravidla (stavové přechody, kontrola kapacity, kontrola rolí, prevence duplicit).
+- Perzistence: JPA entity v `src/main/java/.../domain` a Spring Data repository v `src/main/java/.../domain/repo` ukládají data do relační databáze.
+- Migrace: Flyway migrace v `src/main/resources/db/migration` (a `db/migration/h2` pro profil `local`) drží databázové schéma verzované.
+- Error handling: `ApiExceptionHandler` převádí doménové výjimky na konzistentní HTTP odpovědi (`403/404/409` + `ApiError`); validační chyby těla requestu jsou `400`.
+- Resolving aktéra/role: `ActorResolver` čte request hlavičky (`X-Actor-Role`, volitelně `X-Actor-Id`) pro autorizaci admin-only operací.
+- UI: minimální statická stránka je servírovaná z `src/main/resources/static/index.html` jako lehký klient nad API (admin/diagnostika jsou záměrně schované).
 
-## Tests
-Unit tests: `*Test.java` (domain rules and controllers).
+## Testy
+Jednotkové testy: `*Test.java` (doménová pravidla a controllery).
 
-Integration tests: `*IT.java` using Testcontainers when Docker is available.
+Integrační testy: `*IT.java` s Testcontainers, když je dostupný Docker.
 
-Run:
+Spuštění:
 ```bash
 mvn -B verify
 ```
 
-## Testing Strategy
-The goal is to keep most business rules covered by fast unit tests and use a small number of realistic integration tests:
-- Unit tests (`*Test.java`): focus on business rules and edge cases in services (e.g. invalid state transitions, capacity full, duplicates) and on controller wiring (status codes, JSON shape, header-based actor resolution).
-- Integration tests (`*IT.java`): verify end-to-end behavior across layers (controller -> service -> DB) using a real PostgreSQL database via Testcontainers.
-- Mocks/test doubles: Mockito is used for repository ports and for `NotificationPort` (external side effect). `Clock.fixed(...)` is used to make time-based rules deterministic.
-- BDD: not used in this project; API flows are verified via integration tests instead.
-- What is intentionally not tested: pure plumbing/boilerplate such as JPA annotations mapping details, simple DTO records, and the static UI HTML (the UI is a thin client over already-tested API rules).
+## Testovací strategie
+Cílem je mít většinu business pravidel pokrytou rychlými unit testy a k tomu jen pár realistických integračních testů:
+- Unit testy (`*Test.java`): zaměřují se na business pravidla a hraniční stavy ve službách (např. neplatné přechody stavů, plná kapacita, duplicity) a na `wiring` controllerů (HTTP statusy, tvar JSONu, header-based actor resolution).
+- Integrační testy (`*IT.java`): ověřují end-to-end chování přes vrstvy (controller -> service -> DB) s reálnou PostgreSQL databází přes Testcontainers.
+- Mocky/test doubles: Mockito je použité pro repository a pro `NotificationPort` (externí side effect). `Clock.fixed(...)` je použité, aby byla pravidla závislá na čase deterministická.
+- BDD: v projektu nepoužíváme; místo toho ověřujeme API flow integračními testy.
+- Co záměrně netestujeme: čistý `plumbing`/boilerplate (detaily JPA mapování anotacemi, jednoduché DTO/recordy) a statické UI HTML (UI je tenký klient nad už otestovanými pravidly v API).
 
 ## CI/CD
 GitHub Actions:
-- build + unit/integration tests
-- JaCoCo coverage check + report artifact
+- build + unit/integration testy
+- JaCoCo coverage check + report jako artefakt
 - Checkstyle
-- build + push Docker image to GHCR on `main`
-- deploy to Kubernetes `staging` on `main` (kind on runner) + smoke test
+- build + push Docker image do GHCR na `main`
+- deploy do Kubernetes `staging` na `main` (kind na runneru) + smoke test
 
 ## Kubernetes
-Manifests use Kustomize overlays:
+Manifesty používají Kustomize overlay:
 - staging: `k8s/overlays/staging`
 - prod: `k8s/overlays/prod`
 
-Secrets are not committed. Create `secret.env` based on `secret.env.example` and apply:
+Secrety nejsou committované. Vytvoř `secret.env` podle `secret.env.example` a aplikuj:
 ```bash
 kubectl apply -k k8s/overlays/staging
 kubectl -n staging port-forward svc/reservationcamps 8080:80
