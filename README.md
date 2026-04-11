@@ -32,10 +32,17 @@ export DB_PASSWORD=reservationcamps
 mvn -B spring-boot:run
 ```
 
-Spuštění bez PostgreSQL (in-memory H2, profil `local`, port 8081):
+Spuštění bez PostgreSQL (file-based H2, profil `local`, port 8081):
 ```bash
 mvn -B clean spring-boot:run -Dspring-boot.run.profiles=local
 ```
+
+Pokud chceš v profilu `local` mít bootstrap admin účet s heslem `admin`, spusť:
+```bash
+BOOTSTRAP_ADMIN_PASSWORD=admin mvn -B clean spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+Důvod: hesla (secrety) nechceme mít napevno v repozitáři v plaintextu. Proto se heslo pro lokální bootstrap bere z environment proměnné (případně se jednorázově vygeneruje a uloží do `./data/bootstrap-admin.txt`, která je v `.gitignore`).
 
 Health:
 ```bash
