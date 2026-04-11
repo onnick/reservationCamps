@@ -458,16 +458,21 @@
         <section class="card">
           <h2>Rezervace</h2>
           <h3>1) Kontakt</h3>
-          <div class="row cols2">
+          <div class="row cols3">
             <div>
               <label for="userEmail">Email</label>
               <input id="userEmail" placeholder="např. jana.novakova@example.com" inputmode="email" />
               <div class="hint">Používáme jen pro identifikaci rezervace v téhle demo aplikaci.</div>
             </div>
             <div>
+              <label for="userPassword">Heslo</label>
+              <input id="userPassword" type="password" placeholder="min. 8 znaků" autocomplete="current-password" />
+              <div class="hint">Ukládá se jen hash do DB (BCrypt). Heslo si neukládáme do prohlížeče.</div>
+            </div>
+            <div>
               <label for="userId">ID zákazníka</label>
-              <input id="userId" placeholder="vygeneruje se po ověření emailu" readonly />
-              <div class="hint"><code>Tip:</code> uloží se do prohlížeče, nemusíte ho opisovat.</div>
+              <input id="userId" placeholder="vygeneruje se po přihlášení" readonly />
+              <div class="hint"><code>Tip:</code> vygeneruje se po přihlášení / registraci.</div>
             </div>
           </div>
           <div class="actions">
@@ -638,7 +643,6 @@
 
       const LS = {
         email: "rc_email",
-        userId: "rc_user_id",
         reservationId: "rc_reservation_id",
         campId: "rc_camp_id",
         sessionId: "rc_session_id"
@@ -735,7 +739,6 @@
 
       function persist() {
         if (state.email) localStorage.setItem(LS.email, state.email);
-        if (state.userId) localStorage.setItem(LS.userId, state.userId);
         if (state.reservationId) localStorage.setItem(LS.reservationId, state.reservationId);
         if (state.campId) localStorage.setItem(LS.campId, state.campId);
         if (state.sessionId) localStorage.setItem(LS.sessionId, state.sessionId);
@@ -747,13 +750,11 @@
 
       function restore() {
         state.email = localStorage.getItem(LS.email) || null;
-        state.userId = localStorage.getItem(LS.userId) || null;
         state.reservationId = localStorage.getItem(LS.reservationId) || null;
         state.campId = localStorage.getItem(LS.campId) || null;
         state.sessionId = localStorage.getItem(LS.sessionId) || null;
 
         if (state.email) setVal("userEmail", state.email);
-        if (state.userId) setVal("userId", state.userId);
         if (state.reservationId) setVal("reservationId", state.reservationId);
       }
 
@@ -837,29 +838,41 @@
 
       async function ensureUser() {
         const email = getVal("userEmail");
+        const password = getVal("userPassword");
         if (!email) {
           toast("bad", "Zadejte email.");
+          return;
+        }
+        if (!password || password.length < 8) {
+          toast("bad", "Zadejte heslo (min. 8 znaků).");
           return;
         }
 
         setEnabled("ensureUserBtn", false);
         try {
-          let user;
           try {
-            user = await request("GET", `/api/users/by-email?email=${encodeURIComponent(email)}`);
-            write("user-by-email", user);
+            const login = await request("POST", "/api/users/login", { email, password });
+            write("user-login", login);
+            state.email = email.trim().toLowerCase();
+            state.userId = login.id;
+            setVal("userId", login.id);
+            persist();
+            toast("good", "Přihlášeno. Můžete vybrat tábor.");
           } catch (e) {
+            if (e.status === 403) {
+              toast("bad", "Špatné heslo pro tento email.", "Přihlášení");
+              write("user-login-error", e);
+              return;
+            }
             if (e.status !== 404) throw e;
-            const created = await request("POST", "/api/users", { email });
+            const created = await request("POST", "/api/users", { email, password });
             write("user-created", created);
-            user = { id: created.id, email };
+            state.email = email.trim().toLowerCase();
+            state.userId = created.id;
+            setVal("userId", created.id);
+            persist();
+            toast("good", "Uživatel vytvořen. Můžete vybrat tábor.");
           }
-
-          state.email = email.trim().toLowerCase();
-          state.userId = user.id;
-          setVal("userId", user.id);
-          persist();
-          toast("good", "Email ověřen. Můžete vybrat tábor.");
 
           setEnabled("campSelect", true);
           setEnabled("reloadBtn", true);
@@ -1072,6 +1085,7 @@
         state.sessions = [];
 
         setVal("userEmail", "");
+        setVal("userPassword", "");
         setVal("userId", "");
         setVal("reservationId", "");
         setVal("reservationStatus", "");
@@ -1118,15 +1132,13 @@
       restore();
       setBadge(getVal("reservationStatus"));
       syncReservationActions(getVal("reservationStatus"));
-      setEnabled("campSelect", !!state.userId);
-      setEnabled("reloadBtn", !!state.userId);
+      setEnabled("campSelect", false);
+      setEnabled("reloadBtn", false);
       setEnabled("sessionSelect", false);
       setSummary({ campName: null, sessionLabel: null, priceCents: null });
 
       refreshHealth();
-      if (state.userId) reloadOffer().catch((e) => write("offer-restore-error", e));
       if (state.reservationId) refreshReservation().catch((e) => write("reservation-restore-error", e));
     </script>
   </body>
 </html>
-

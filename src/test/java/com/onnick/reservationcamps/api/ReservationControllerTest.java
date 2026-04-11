@@ -40,7 +40,7 @@ class ReservationControllerTest {
         var userId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, Instant.EPOCH);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, Instant.EPOCH);
         var session =
                 new CampSession(
@@ -65,7 +65,7 @@ class ReservationControllerTest {
     void confirmCallsService() throws Exception {
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(UUID.randomUUID(), "a@example.com", UserRole.CUSTOMER, Instant.EPOCH);
+        var user = new AppUser(UUID.randomUUID(), "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, Instant.EPOCH);
         var session =
                 new CampSession(

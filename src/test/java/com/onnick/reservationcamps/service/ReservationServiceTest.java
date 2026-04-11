@@ -46,7 +46,7 @@ class ReservationServiceTest {
         var userId = UUID.randomUUID();
         var sessionId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, NOW);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
         var session =
                 new CampSession(
@@ -74,7 +74,7 @@ class ReservationServiceTest {
         var userId = UUID.randomUUID();
         var sessionId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, NOW);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
         var session =
                 new CampSession(
@@ -101,7 +101,7 @@ class ReservationServiceTest {
         var sessionId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, NOW);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
         var session =
                 new CampSession(
@@ -131,7 +131,7 @@ class ReservationServiceTest {
         var sessionId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, NOW);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
         var session =
                 new CampSession(
@@ -160,7 +160,7 @@ class ReservationServiceTest {
         var sessionId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, NOW);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
         var session =
                 new CampSession(
@@ -193,7 +193,7 @@ class ReservationServiceTest {
         var sessionId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, NOW);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
         var session =
                 new CampSession(
@@ -223,7 +223,7 @@ class ReservationServiceTest {
         var sessionId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, NOW);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
         var session =
                 new CampSession(
@@ -252,7 +252,7 @@ class ReservationServiceTest {
         var sessionId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", UserRole.CUSTOMER, NOW);
+        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, NOW);
         var camp = new Camp(UUID.randomUUID(), "Camp", 1000, NOW);
         var session =
                 new CampSession(

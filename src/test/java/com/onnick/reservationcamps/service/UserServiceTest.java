@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -26,28 +27,34 @@ class UserServiceTest {
     @Test
     void createsUserWithNormalizedEmail() {
         var clock = Clock.fixed(NOW, ZoneOffset.UTC);
-        var service = new UserService(userRepository, clock);
+        var encoder = new BCryptPasswordEncoder();
+        var service = new UserService(userRepository, clock, encoder);
 
         when(userRepository.findByEmail("a@example.com")).thenReturn(Optional.empty());
         when(userRepository.save(org.mockito.Mockito.any()))
                 .thenAnswer(inv -> inv.getArgument(0));
 
-        var user = service.createUser(" A@Example.com ", UserRole.CUSTOMER);
+        var user = service.createUser(" A@Example.com ", "password123", UserRole.CUSTOMER);
 
         assertThat(user.getEmail()).isEqualTo("a@example.com");
         assertThat(user.getRole()).isEqualTo(UserRole.CUSTOMER);
         assertThat(user.getCreatedAt()).isEqualTo(NOW);
+        assertThat(encoder.matches("password123", user.getPasswordHash())).isTrue();
     }
 
     @Test
     void rejectsDuplicateEmail() {
         var clock = Clock.fixed(NOW, ZoneOffset.UTC);
-        var service = new UserService(userRepository, clock);
+        var encoder = new BCryptPasswordEncoder();
+        var service = new UserService(userRepository, clock, encoder);
 
         when(userRepository.findByEmail("a@example.com"))
-                .thenReturn(Optional.of(new com.onnick.reservationcamps.domain.AppUser(UUID.randomUUID(), "a@example.com", UserRole.CUSTOMER, NOW)));
+                .thenReturn(
+                        Optional.of(
+                                new com.onnick.reservationcamps.domain.AppUser(
+                                        UUID.randomUUID(), "a@example.com", encoder.encode("password123"), UserRole.CUSTOMER, NOW)));
 
-        assertThatThrownBy(() -> service.createUser("a@example.com", UserRole.CUSTOMER))
+        assertThatThrownBy(() -> service.createUser("a@example.com", "password123", UserRole.CUSTOMER))
                 .isInstanceOf(BusinessRuleViolationException.class)
                 .satisfies(
                         ex ->
@@ -58,9 +65,9 @@ class UserServiceTest {
     @Test
     void rejectsBlankEmail() {
         var clock = Clock.fixed(NOW, ZoneOffset.UTC);
-        var service = new UserService(userRepository, clock);
+        var service = new UserService(userRepository, clock, new BCryptPasswordEncoder());
 
-        assertThatThrownBy(() -> service.createUser(" ", UserRole.CUSTOMER))
+        assertThatThrownBy(() -> service.createUser(" ", "password123", UserRole.CUSTOMER))
                 .isInstanceOf(BusinessRuleViolationException.class)
                 .satisfies(
                         ex ->
@@ -71,13 +78,26 @@ class UserServiceTest {
     @Test
     void rejectsNullRole() {
         var clock = Clock.fixed(NOW, ZoneOffset.UTC);
-        var service = new UserService(userRepository, clock);
+        var service = new UserService(userRepository, clock, new BCryptPasswordEncoder());
 
-        assertThatThrownBy(() -> service.createUser("a@example.com", null))
+        assertThatThrownBy(() -> service.createUser("a@example.com", "password123", null))
                 .isInstanceOf(BusinessRuleViolationException.class)
                 .satisfies(
                         ex ->
                                 assertThat(((BusinessRuleViolationException) ex).getCode())
                                         .isEqualTo("user.role.required"));
+    }
+
+    @Test
+    void rejectsBlankPassword() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service = new UserService(userRepository, clock, new BCryptPasswordEncoder());
+
+        assertThatThrownBy(() -> service.createUser("a@example.com", "   ", UserRole.CUSTOMER))
+                .isInstanceOf(BusinessRuleViolationException.class)
+                .satisfies(
+                        ex ->
+                                assertThat(((BusinessRuleViolationException) ex).getCode())
+                                        .isEqualTo("user.password.required"));
     }
 }

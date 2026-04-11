@@ -2,6 +2,7 @@ package com.onnick.reservationcamps.api;
 
 import com.onnick.reservationcamps.api.dto.CreateUserRequest;
 import com.onnick.reservationcamps.api.dto.IdResponse;
+import com.onnick.reservationcamps.api.dto.LoginRequest;
 import com.onnick.reservationcamps.api.dto.UserResponse;
 import com.onnick.reservationcamps.domain.UserRole;
 import com.onnick.reservationcamps.domain.error.NotFoundException;
@@ -41,7 +42,13 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public IdResponse create(@Valid @RequestBody CreateUserRequest request) {
         var role = request.role() == null ? UserRole.CUSTOMER : request.role();
-        var user = userService.createUser(request.email(), role);
+        var user = userService.createUser(request.email(), request.password(), role);
+        return new IdResponse(user.getId());
+    }
+
+    @PostMapping("/login")
+    public IdResponse login(@Valid @RequestBody LoginRequest request) {
+        var user = userService.login(request.email(), request.password());
         return new IdResponse(user.getId());
     }
 }

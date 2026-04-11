@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onnick.reservationcamps.api.dto.CreateUserRequest;
+import com.onnick.reservationcamps.api.dto.LoginRequest;
 import com.onnick.reservationcamps.domain.AppUser;
 import com.onnick.reservationcamps.domain.UserRole;
 import com.onnick.reservationcamps.service.UserService;
@@ -33,20 +34,22 @@ class UserControllerTest {
     @Test
     void createsUser() throws Exception {
         var id = UUID.randomUUID();
-        when(userService.createUser(eq("a@example.com"), eq(UserRole.CUSTOMER)))
-                .thenReturn(new AppUser(id, "a@example.com", UserRole.CUSTOMER, Instant.EPOCH));
+        when(userService.createUser(eq("a@example.com"), eq("password123"), eq(UserRole.CUSTOMER)))
+                .thenReturn(new AppUser(id, "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH));
 
         mvc.perform(
                         post("/api/users")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(new CreateUserRequest("a@example.com", null))))
+                                .content(
+                                        objectMapper.writeValueAsString(
+                                                new CreateUserRequest("a@example.com", "password123", null))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(id.toString()));
     }
 
     @Test
     void rejectsInvalidBody() throws Exception {
-        when(userService.createUser(any(), any())).thenThrow(new AssertionError("should not be called"));
+        when(userService.createUser(any(), any(), any())).thenThrow(new AssertionError("should not be called"));
 
         mvc.perform(
                         post("/api/users")
@@ -54,5 +57,18 @@ class UserControllerTest {
                                 .content("{}"))
                 .andExpect(status().isBadRequest());
     }
-}
 
+    @Test
+    void loginReturnsId() throws Exception {
+        var id = UUID.randomUUID();
+        when(userService.login(eq("a@example.com"), eq("password123")))
+                .thenReturn(new AppUser(id, "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH));
+
+        mvc.perform(
+                        post("/api/users/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(new LoginRequest("a@example.com", "password123"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()));
+    }
+}

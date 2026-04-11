@@ -88,7 +88,7 @@ class ReservationFlowIT {
         var response =
                 post(
                         "/api/users",
-                        new CreateUserRequest(email, UserRole.CUSTOMER),
+                        new CreateUserRequest(email, "password123", UserRole.CUSTOMER),
                         IdResponse.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         return response.getBody().id();
