@@ -65,6 +65,16 @@ curl -sS -X POST http://localhost:8080/api/camps \
   -d '{"name":"Camp","basePriceCents":1000}'
 ```
 
+## Architecture
+The application follows a simple layered architecture:
+- API layer: REST controllers in `src/main/java/.../api` expose HTTP endpoints and map requests/responses.
+- Application/domain logic: services in `src/main/java/.../service` implement business rules (state transitions, capacity checks, role checks, duplicate prevention).
+- Persistence: JPA entities in `src/main/java/.../domain` and Spring Data repositories in `src/main/java/.../domain/repo` store data in a relational database.
+- Migrations: Flyway migrations in `src/main/resources/db/migration` (and `db/migration/h2` for the `local` profile) keep schema versioned.
+- Error handling: `ApiExceptionHandler` converts domain exceptions to consistent HTTP responses (`403/404/409` + `ApiError`); request body validation errors are `400`.
+- Actor/role resolution: `ActorResolver` reads request headers (`X-Actor-Role`, optional `X-Actor-Id`) to authorize admin-only operations.
+- UI: a minimal static page is served from `src/main/resources/static/index.html` as a lightweight client for the API (admin/diagnostics are intentionally hidden).
+
 ## Tests
 Unit tests: `*Test.java` (domain rules and controllers).
 
@@ -74,6 +84,14 @@ Run:
 ```bash
 mvn -B verify
 ```
+
+## Testing Strategy
+The goal is to keep most business rules covered by fast unit tests and use a small number of realistic integration tests:
+- Unit tests (`*Test.java`): focus on business rules and edge cases in services (e.g. invalid state transitions, capacity full, duplicates) and on controller wiring (status codes, JSON shape, header-based actor resolution).
+- Integration tests (`*IT.java`): verify end-to-end behavior across layers (controller -> service -> DB) using a real PostgreSQL database via Testcontainers.
+- Mocks/test doubles: Mockito is used for repository ports and for `NotificationPort` (external side effect). `Clock.fixed(...)` is used to make time-based rules deterministic.
+- BDD: not used in this project; API flows are verified via integration tests instead.
+- What is intentionally not tested: pure plumbing/boilerplate such as JPA annotations mapping details, simple DTO records, and the static UI HTML (the UI is a thin client over already-tested API rules).
 
 ## CI/CD
 GitHub Actions:
