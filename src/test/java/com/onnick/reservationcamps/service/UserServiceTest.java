@@ -112,4 +112,14 @@ class UserServiceTest {
 
         assertThat(service.searchByEmail(" EX ")).isEmpty();
     }
+
+    @Test
+    void recentUsersDelegatesToRepo() {
+        var clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        var service = new UserService(userRepository, clock, new BCryptPasswordEncoder());
+
+        when(userRepository.findTop20ByOrderByEmailAsc()).thenReturn(List.of());
+
+        assertThat(service.recentUsers()).isEmpty();
+    }
 }

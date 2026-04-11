@@ -45,6 +45,17 @@ public class UserController {
         return userService.searchByEmail(q).stream().map(u -> new UserSummaryResponse(u.getId(), u.getEmail())).toList();
     }
 
+    @GetMapping("/recent")
+    public List<UserSummaryResponse> recent() {
+        return userService.recentUsers().stream().map(u -> new UserSummaryResponse(u.getId(), u.getEmail())).toList();
+    }
+
+    @GetMapping
+    public List<UserSummaryResponse> list() {
+        // Demo endpoint: list a bounded number of users so the UI can offer a pick-list.
+        return userService.listUsers(200).stream().map(u -> new UserSummaryResponse(u.getId(), u.getEmail())).toList();
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public IdResponse create(@Valid @RequestBody CreateUserRequest request) {

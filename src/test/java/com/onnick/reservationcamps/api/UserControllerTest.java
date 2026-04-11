@@ -87,4 +87,32 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[1].id").value(u2.getId().toString()))
                 .andExpect(jsonPath("$[1].email").value("b@example.com"));
     }
+
+    @Test
+    void recentReturnsUsers() throws Exception {
+        var u1 = new AppUser(UUID.randomUUID(), "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
+        var u2 = new AppUser(UUID.randomUUID(), "b@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
+        when(userService.recentUsers()).thenReturn(List.of(u1, u2));
+
+        mvc.perform(get("/api/users/recent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(u1.getId().toString()))
+                .andExpect(jsonPath("$[0].email").value("a@example.com"))
+                .andExpect(jsonPath("$[1].id").value(u2.getId().toString()))
+                .andExpect(jsonPath("$[1].email").value("b@example.com"));
+    }
+
+    @Test
+    void listReturnsUsers() throws Exception {
+        var u1 = new AppUser(UUID.randomUUID(), "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
+        var u2 = new AppUser(UUID.randomUUID(), "b@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
+        when(userService.listUsers(eq(200))).thenReturn(List.of(u1, u2));
+
+        mvc.perform(get("/api/users"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(u1.getId().toString()))
+                .andExpect(jsonPath("$[0].email").value("a@example.com"))
+                .andExpect(jsonPath("$[1].id").value(u2.getId().toString()))
+                .andExpect(jsonPath("$[1].email").value("b@example.com"));
+    }
 }

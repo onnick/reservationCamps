@@ -11,6 +11,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -72,6 +74,20 @@ public class UserService {
         }
         // Used by the demo UI for "pick existing user". In a real app this should be access-controlled.
         return userRepository.findTop20ByEmailContainingIgnoreCaseOrderByEmailAsc(normalized);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AppUser> recentUsers() {
+        // Used by the demo UI for "pick existing user". In a real app this should be access-controlled.
+        return userRepository.findTop20ByOrderByEmailAsc();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AppUser> listUsers(int limit) {
+        int capped = Math.min(Math.max(limit, 1), 500);
+        return userRepository
+                .findAll(PageRequest.of(0, capped, Sort.by(Sort.Direction.ASC, "email")))
+                .getContent();
     }
 
     @Transactional(readOnly = true)

@@ -10,4 +10,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
     Optional<AppUser> findByEmail(String email);
 
     List<AppUser> findTop20ByEmailContainingIgnoreCaseOrderByEmailAsc(String q);
+
+    List<AppUser> findTop20ByOrderByEmailAsc();
 }
