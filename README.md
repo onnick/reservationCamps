@@ -85,6 +85,8 @@ Aplikace má jednoduchou vrstvenou architekturu:
 ## Dokumentace
 - SRS: [docs/SRS.md](docs/SRS.md)
 - SDD: [docs/SDD.md](docs/SDD.md)
+- Uživatelská příručka: [docs/USER_MANUAL.md](docs/USER_MANUAL.md)
+- Administrátorská příručka: [docs/ADMIN_MANUAL.md](docs/ADMIN_MANUAL.md)
 
 ## Testy
 Jednotkové testy: `*Test.java` (doménová pravidla a controllery).
