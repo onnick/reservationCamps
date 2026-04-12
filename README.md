@@ -82,6 +82,9 @@ Aplikace má jednoduchou vrstvenou architekturu:
 - Resolving aktéra/role: `ActorResolver` čte request hlavičky (`X-Actor-Role`, volitelně `X-Actor-Id`) pro autorizaci admin-only operací.
 - UI: minimální statická stránka je servírovaná z `src/main/resources/static/index.html` jako lehký klient nad API (admin/diagnostika jsou záměrně schované).
 
+## Dokumentace
+- SRS: [docs/SRS.md](docs/SRS.md)
+
 ## Testy
 Jednotkové testy: `*Test.java` (doménová pravidla a controllery).
 
