@@ -2,7 +2,7 @@
 
 Spring Boot REST API pro rezervace táborů.
 
-## Rychlé vysvětlivky (pro obhajobu)
+## Rychlé vysvětlivky
 - Spring Boot: framework pro tvorbu Java web aplikací (spuštění, konfigurace, DI, web server).
 - REST API: HTTP rozhraní s endpointy a JSON request/response.
 - JPA a Hibernate: ORM vrstva, která mapuje Java entity na relační tabulky a řeší práci s DB přes objekty.
