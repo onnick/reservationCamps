@@ -90,6 +90,14 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.13</version>
+                <configuration>
+                    <!-- Exclude wiring/DTO classes from coverage gates. -->
+                    <excludes>
+                        <exclude>com/onnick/reservationcamps/config/**</exclude>
+                        <exclude>com/onnick/reservationcamps/api/dto/**</exclude>
+                        <exclude>com/onnick/reservationcamps/api/PageController*</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -118,6 +126,11 @@
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
+                                    <excludes>
+                                        <exclude>com/onnick/reservationcamps/config/**</exclude>
+                                        <exclude>com/onnick/reservationcamps/api/dto/**</exclude>
+                                        <exclude>com/onnick/reservationcamps/api/PageController*</exclude>
+                                    </excludes>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>

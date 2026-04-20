@@ -10,7 +10,6 @@ import com.onnick.reservationcamps.api.dto.IdResponse;
 import com.onnick.reservationcamps.api.dto.ReservationResponse;
 import com.onnick.reservationcamps.api.dto.UserReservationRowResponse;
 import com.onnick.reservationcamps.domain.ReservationStatus;
-import com.onnick.reservationcamps.domain.UserRole;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
