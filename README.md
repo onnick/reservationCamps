@@ -48,8 +48,8 @@ docker compose up --build
 Spuštění přímo (je potřeba běžící PostgreSQL, připojení se nastavuje přes env proměnné):
 ```bash
 export DB_URL=jdbc:postgresql://localhost:5432/reservationcamps
-export DB_USERNAME=reservationcamps
-export DB_PASSWORD=reservationcamps
+export DB_USERNAME=*****
+export DB_PASSWORD=*****
 mvn -B spring-boot:run
 ```
 
