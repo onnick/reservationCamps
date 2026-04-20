@@ -2,6 +2,27 @@
 
 Spring Boot REST API pro rezervace táborů.
 
+## Rychlé vysvětlivky (pro obhajobu)
+- Spring Boot: framework pro tvorbu Java web aplikací (spuštění, konfigurace, DI, web server).
+- REST API: HTTP rozhraní s endpointy a JSON request/response.
+- JPA a Hibernate: ORM vrstva, která mapuje Java entity na relační tabulky a řeší práci s DB přes objekty.
+- Flyway: verzování databázového schématu pomocí migrací (SQL skripty), aby prostředí měla stejné schéma.
+- PostgreSQL: produkčně použitelná relační DB (default profil).
+- H2 (file-based): lehká lokální DB pro vývoj; file-based znamená, že data přežijí restart aplikace.
+- Profil (`spring.profiles.active=local`): přepínání konfigurace pro různá prostředí (local vs default).
+- Actuator: provozní endpointy aplikace (např. `/actuator/health`).
+- Prometheus metriky: endpoint `/actuator/prometheus` pro export metrik (monitoring).
+- JaCoCo: měření test coverage (kolik řádků/větví kódu bylo spuštěno testy) + report v CI.
+- Checkstyle: statická kontrola stylu a pravidel kódu (kvalita a konzistence).
+- Testcontainers: integrační testy s reálnou DB v Docker kontejneru, aby testy byly realistické.
+- Docker image: zabalená aplikace do kontejneru pro spouštění a nasazení.
+- Docker Compose: lokální orchestr pro spuštění více služeb najednou (app + DB).
+- Kubernetes: orchestr pro nasazení kontejnerů do clusteru (staging/prod).
+- Kustomize: správa K8s manifestů přes base + overlay (např. staging a prod).
+- kind: lokální Kubernetes cluster používaný v CI (běží přímo na GitHub runneru).
+- Smoke test: rychlé ověření, že po deployi aplikace reálně odpovídá (např. health endpoint).
+- Artefakt v CI: soubor uložený z pipeline (např. JaCoCo report, test reporty, logy, metriky).
+
 ## Doména
 Entity:
 - `AppUser` (role: `ADMIN` or `CUSTOMER`)
@@ -19,12 +40,12 @@ Business pravidla (příklady):
 ## Spuštění lokálně
 Požadavky: Java 21+, Docker (volitelně, ale doporučeno).
 
-Spuštění přes Docker Compose (aplikace + PostgreSQL):
+Spuštění přes Docker Compose (aplikace + PostgreSQL, doporučená varianta pro realističtější prostředí):
 ```bash
 docker compose up --build
 ```
 
-Spuštění přímo (je potřeba běžící PostgreSQL):
+Spuštění přímo (je potřeba běžící PostgreSQL, připojení se nastavuje přes env proměnné):
 ```bash
 export DB_URL=jdbc:postgresql://localhost:5432/reservationcamps
 export DB_USERNAME=reservationcamps
@@ -32,7 +53,7 @@ export DB_PASSWORD=reservationcamps
 mvn -B spring-boot:run
 ```
 
-Spuštění bez PostgreSQL (file-based H2, profil `local`, port 8081):
+Spuštění bez PostgreSQL (file-based H2, profil `local`, port 8081, data se ukládají do `./data/`):
 ```bash
 mvn -B clean spring-boot:run -Dspring-boot.run.profiles=local
 ```
@@ -57,6 +78,8 @@ curl -fsS http://localhost:8081/actuator/health
 ## API
 Admin endpointy vyžadují hlavičku `X-Actor-Role: ADMIN`.
 
+Vysvětlivka: hlavička `X-Actor-Role` simuluje „kdo volá“ (role aktéra). Pro admin-only operace server kontroluje, že je role ADMIN (a u některých endpointů se ověřuje i `X-Actor-Id` proti DB).
+
 Vytvoření uživatele:
 ```bash
 curl -sS -X POST http://localhost:8080/api/users \
@@ -75,12 +98,19 @@ curl -sS -X POST http://localhost:8080/api/camps \
 ## Architektura
 Aplikace má jednoduchou vrstvenou architekturu:
 - API vrstva: REST controllery v `src/main/java/.../api` vystavují HTTP endpointy a mapují request/response.
+  Vysvětlivka: controller je „vstupní brána“ přes HTTP, ale pravidla držíme v service vrstvě.
 - Aplikační/doménová logika: služby v `src/main/java/.../service` implementují business pravidla (stavové přechody, kontrola kapacity, kontrola rolí, prevence duplicit).
+  Vysvětlivka: service vrstva je místo, kde je doménová logika testovatelná a nezávislá na UI.
 - Perzistence: JPA entity v `src/main/java/.../domain` a Spring Data repository v `src/main/java/.../domain/repo` ukládají data do relační databáze.
+  Vysvětlivka: Hibernate/JPA mapuje entity a vztahy do tabulek; repository poskytují dotazy a CRUD.
 - Migrace: Flyway migrace v `src/main/resources/db/migration` (a `db/migration/h2` pro profil `local`) drží databázové schéma verzované.
+  Vysvětlivka: migrace jsou auditovatelný „zdroj pravdy“ pro DB schéma napříč prostředími.
 - Error handling: `ApiExceptionHandler` převádí doménové výjimky na konzistentní HTTP odpovědi (`403/404/409` + `ApiError`); validační chyby těla requestu jsou `400`.
+  Vysvětlivka: klient dostane stabilní HTTP kód a zprávu místo náhodných chyb.
 - Resolving aktéra/role: `ActorResolver` čte request hlavičky (`X-Actor-Role`, volitelně `X-Actor-Id`) pro autorizaci admin-only operací.
-- UI: minimální statická stránka je servírovaná z `src/main/resources/static/index.html` jako lehký klient nad API (admin/diagnostika jsou záměrně schované).
+  Vysvětlivka: je to školní zjednodušení autorizace bez JWT/session.
+- UI: statické stránky v `src/main/resources/static/` jsou lehký klient nad API.
+  Vysvětlivka: UI je „thin client“ a business pravidla se vynucují na serveru.
 
 ## Dokumentace
 - SRS: [docs/SRS.md](docs/SRS.md)
@@ -90,13 +120,16 @@ Aplikace má jednoduchou vrstvenou architekturu:
 
 ## Testy
 Jednotkové testy: `*Test.java` (doménová pravidla a controllery).
+Vysvětlivka: unit testy jsou rychlé a ověřují hlavně business pravidla a hraniční stavy.
 
 Integrační testy: `*IT.java` s Testcontainers, když je dostupný Docker.
+Vysvětlivka: integrační test spouští reálný stack controller -> service -> DB (PostgreSQL v kontejneru).
 
 Spuštění:
 ```bash
 mvn -B verify
 ```
+Vysvětlivka: `verify` spustí unit testy, integrační testy (pokud je Docker), vygeneruje JaCoCo report a v CI vyhodnotí coverage pravidla.
 
 ## Testovací strategie
 Cílem je mít většinu business pravidel pokrytou rychlými unit testy a k tomu jen pár realistických integračních testů:
@@ -114,6 +147,8 @@ GitHub Actions:
 - build + push Docker image do GHCR na `main`
 - deploy do Kubernetes `staging` na `main` (kind na runneru) + smoke test
 - observability (bonus): po staging deploy se stáhnou logy z Kubernetes a export metrik z `/actuator/prometheus` jako artefakt
+
+Vysvětlivka: CI je automatická kontrola kvality (build, testy, coverage, statická analýza). CD je automatizovaný deploy do staging, aby bylo vidět, že aplikace je nasaditelná a provozně ověřitelná.
 
 ## Kubernetes
 Manifesty používají Kustomize overlay:
