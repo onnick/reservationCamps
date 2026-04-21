@@ -26,7 +26,11 @@ jobs:
           docker info || true
 
       - name: Build and test
-        run: mvn -B -e verify
+        run: >
+          mvn -B -e -DtrimStackTrace=false
+          -Dsurefire.useFile=false -Dsurefire.printSummary=true
+          -Dfailsafe.useFile=false -Dfailsafe.printSummary=true
+          verify
 
       - name: Print test reports (on failure)
         if: failure()
