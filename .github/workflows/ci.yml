@@ -31,6 +31,9 @@ jobs:
           -Dsurefire.useFile=false -Dsurefire.printSummary=true
           -Dfailsafe.useFile=false -Dfailsafe.printSummary=true
           verify
+        env:
+          # CI runners are ephemeral; disabling Ryuk avoids flaky pulls from Docker Hub (rate limits).
+          TESTCONTAINERS_RYUK_DISABLED: "true"
 
       - name: Print test reports (on failure)
         if: failure()
@@ -42,7 +45,7 @@ jobs:
             if [ -f "$f" ]; then
               echo "===== $f"
               # Keep logs readable; XML and dumpstreams often contain the real root cause.
-              sed -n '1,260p' "$f" || true
+              sed -n '1,520p' "$f" || true
             fi
           done
 
