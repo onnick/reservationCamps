@@ -12,6 +12,24 @@ spec:
       labels:
         app: reservationcamps
     spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: reservationcamps-secrets
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              echo "Waiting for postgres to accept connections..."
+              for i in $(seq 1 60); do
+                pg_isready -h postgres -p 5432 -U "${DB_USERNAME:-reservationcamps}" && exit 0
+                sleep 2
+              done
+              echo "Postgres not ready in time" >&2
+              exit 1
       containers:
         - name: reservationcamps
           image: reservationcamps
@@ -32,14 +50,13 @@ spec:
               memory: 512Mi
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 20
-

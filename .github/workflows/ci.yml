@@ -118,9 +118,19 @@ jobs:
 
       - name: Prepare secrets
         run: |
-          cat > k8s/overlays/staging/secret.env << 'EOF'
-          DB_USERNAME=${{ secrets.STAGING_DB_USERNAME }}
-          DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}
+          DB_USERNAME="${{ secrets.STAGING_DB_USERNAME }}"
+          DB_PASSWORD="${{ secrets.STAGING_DB_PASSWORD }}"
+          if [ -z "${DB_USERNAME}" ]; then
+            DB_USERNAME="reservationcamps"
+            echo "WARN: STAGING_DB_USERNAME is not set; using default for kind staging." >&2
+          fi
+          if [ -z "${DB_PASSWORD}" ]; then
+            DB_PASSWORD="reservationcamps"
+            echo "WARN: STAGING_DB_PASSWORD is not set; using default for kind staging." >&2
+          fi
+          cat > k8s/overlays/staging/secret.env << EOF
+          DB_USERNAME=${DB_USERNAME}
+          DB_PASSWORD=${DB_PASSWORD}
           EOF
 
       - name: Create GHCR image pull secret (staging)
