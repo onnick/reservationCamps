@@ -26,28 +26,34 @@ jobs:
           docker info || true
 
       - name: Build and test
-        run: >
-          mvn -B -e -DtrimStackTrace=false
-          -Dsurefire.useFile=false -Dsurefire.printSummary=true
-          -Dfailsafe.useFile=false -Dfailsafe.printSummary=true
-          verify
         env:
           # CI runners are ephemeral; disabling Ryuk avoids flaky pulls from Docker Hub (rate limits).
           TESTCONTAINERS_RYUK_DISABLED: "true"
-
-      - name: Print test reports (on failure)
-        if: failure()
         run: |
-          ls -la target || true
+          set +e
+          mvn -B -e -DtrimStackTrace=false \
+            -Dsurefire.useFile=false -Dsurefire.printSummary=true \
+            -Dfailsafe.useFile=false -Dfailsafe.printSummary=true \
+            verify
+          status=$?
+          echo "===== Maven exit code: ${status}"
+          echo "===== surefire-reports (first 520 lines each) ====="
           ls -la target/surefire-reports || true
-          ls -la target/failsafe-reports || true
-          for f in target/surefire-reports/* target/failsafe-reports/*; do
+          for f in target/surefire-reports/*; do
             if [ -f "$f" ]; then
               echo "===== $f"
-              # Keep logs readable; XML and dumpstreams often contain the real root cause.
               sed -n '1,520p' "$f" || true
             fi
           done
+          echo "===== failsafe-reports (first 520 lines each) ====="
+          ls -la target/failsafe-reports || true
+          for f in target/failsafe-reports/*; do
+            if [ -f "$f" ]; then
+              echo "===== $f"
+              sed -n '1,520p' "$f" || true
+            fi
+          done
+          exit $status
 
       - name: Upload test reports
         if: always()
