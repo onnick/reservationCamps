@@ -123,13 +123,35 @@ jobs:
           DB_PASSWORD=${{ secrets.STAGING_DB_PASSWORD }}
           EOF
 
+      - name: Create GHCR image pull secret (staging)
+        run: |
+          kubectl apply -f k8s/overlays/staging/namespace.yaml
+          kubectl -n staging create secret docker-registry ghcr-pull \
+            --docker-server=ghcr.io \
+            --docker-username="${{ github.actor }}" \
+            --docker-password="${{ secrets.GITHUB_TOKEN }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy to staging
         run: |
+          set -euo pipefail
+          dump() {
+            echo "===== staging diagnostics ====="
+            kubectl -n staging get pods -o wide || true
+            kubectl -n staging get deploy,svc,cm,secret || true
+            kubectl -n staging describe deploy/postgres || true
+            kubectl -n staging describe deploy/reservationcamps || true
+            kubectl -n staging get events --sort-by=.lastTimestamp | tail -n 200 || true
+            kubectl -n staging logs deploy/postgres --all-containers --tail=200 || true
+            kubectl -n staging logs deploy/reservationcamps --all-containers --tail=300 || true
+          }
+          trap dump ERR
+
           cd k8s/overlays/staging
           kustomize edit set image reservationcamps=ghcr.io/onnick/reservationcamps:${{ github.sha }}
           kubectl apply -k .
-          kubectl -n staging rollout status deploy/postgres --timeout=120s
-          kubectl -n staging rollout status deploy/reservationcamps --timeout=180s
+          kubectl -n staging rollout status deploy/postgres --timeout=180s
+          kubectl -n staging rollout status deploy/reservationcamps --timeout=300s
 
       - name: Smoke test
         run: |
@@ -144,8 +166,8 @@ jobs:
         if: always()
         run: |
           kubectl -n staging get pods -o wide
-          kubectl -n staging logs deploy/reservationcamps --tail=500 > reservationcamps.log
-          kubectl -n staging logs deploy/postgres --tail=200 > postgres.log
+          kubectl -n staging logs deploy/reservationcamps --all-containers --tail=500 > reservationcamps.log || true
+          kubectl -n staging logs deploy/postgres --all-containers --tail=200 > postgres.log || true
 
       - name: Upload staging observability artifacts
         if: always()
