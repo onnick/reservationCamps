@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CampService {
@@ -28,7 +27,6 @@ public class CampService {
         this.clock = clock;
     }
 
-    @Transactional
     public Camp createCamp(Actor actor, String name, int basePriceCents) {
         requireAdmin(actor);
 
@@ -44,14 +42,12 @@ public class CampService {
         return campRepository.save(camp);
     }
 
-    @Transactional
     public CampSession createSession(Actor actor, UUID campId, LocalDate startDate, LocalDate endDate, int capacity) {
         requireAdmin(actor);
 
-        var camp =
-                campRepository
-                        .findById(campId)
-                        .orElseThrow(() -> new NotFoundException("Camp not found: " + campId));
+        if (!campRepository.existsById(campId)) {
+            throw new NotFoundException("Camp not found: " + campId);
+        }
 
         if (startDate == null || endDate == null) {
             throw new BusinessRuleViolationException("session.date.required", "Start and end date are required.");
@@ -70,21 +66,19 @@ public class CampService {
         }
 
         var session =
-                new CampSession(UUID.randomUUID(), camp, startDate, endDate, capacity, Instant.now(clock));
+                new CampSession(UUID.randomUUID(), campId, startDate, endDate, capacity, Instant.now(clock));
         return campSessionRepository.save(session);
     }
 
-    @Transactional(readOnly = true)
     public List<Camp> listCamps() {
         return campRepository.findAll();
     }
 
-    @Transactional(readOnly = true)
     public List<CampSession> listSessions(UUID campId) {
         if (!campRepository.existsById(campId)) {
             throw new NotFoundException("Camp not found: " + campId);
         }
-        return campSessionRepository.findAllByCamp_IdOrderByStartDateAsc(campId);
+        return campSessionRepository.findAllByCampIdOrderByStartDateAsc(campId);
     }
 
     private static void requireAdmin(Actor actor) {

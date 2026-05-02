@@ -4,262 +4,35 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Správa rezervací (Admin)</title>
-    <style>
-      :root {
-        --bg0: #fbf7ee;
-        --bg1: #f3efe4;
-        --ink: #1e2a26;
-        --muted: rgba(30, 42, 38, 0.72);
-        --card: rgba(255, 255, 255, 0.72);
-        --card2: rgba(255, 255, 255, 0.58);
-        --shadow: 0 18px 55px rgba(30, 42, 38, 0.13);
-        --good: #1f8a54;
-        --bad: #c53939;
-        --warn: #b6811c;
-        --radius: 18px;
-        --radius2: 12px;
-        --sans: ui-sans-serif, "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, system-ui;
-        --display: ui-serif, "Iowan Old Style", "New York", Palatino, Georgia, serif;
-        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        font-family: var(--sans);
-        color: var(--ink);
-        background:
-          radial-gradient(1200px 600px at 10% 0%, rgba(47, 125, 74, 0.12), transparent 60%),
-          radial-gradient(800px 520px at 90% 0%, rgba(200, 110, 58, 0.10), transparent 55%),
-          radial-gradient(700px 520px at 25% 95%, rgba(47, 95, 143, 0.09), transparent 60%),
-          linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 100%);
-      }
-      .wrap {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 24px 18px 26px;
-      }
-      .hero {
-        display: grid;
-        gap: 10px;
-        padding: 16px;
-        border-radius: calc(var(--radius) + 2px);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.80), rgba(255, 255, 255, 0.60));
-        border: 1px solid rgba(30, 42, 38, 0.10);
-        box-shadow: var(--shadow);
-      }
-      .brand {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      h1 {
-        margin: 0;
-        font-family: var(--display);
-        font-weight: 760;
-        font-size: 26px;
-        line-height: 1.05;
-      }
-      .pill {
-        font-family: var(--mono);
-        font-size: 12px;
-        padding: 6px 10px;
-        border: 1px solid rgba(30, 42, 38, 0.14);
-        background: rgba(255, 255, 255, 0.55);
-        border-radius: 999px;
-        color: rgba(30, 42, 38, 0.70);
-      }
-      .sub {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.35;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
-        margin-top: 14px;
-      }
-      @media (min-width: 980px) {
-        .grid {
-          grid-template-columns: 0.8fr 1.2fr;
-        }
-      }
-
-      .card {
-        border: 1px solid rgba(30, 42, 38, 0.10);
-        background: linear-gradient(180deg, var(--card), var(--card2));
-        border-radius: var(--radius);
-        padding: 14px;
-        box-shadow: 0 10px 30px rgba(30, 42, 38, 0.08);
-      }
-      .card h2 {
-        margin: 0 0 10px 0;
-        font-size: 13px;
-        letter-spacing: 0.24px;
-        text-transform: uppercase;
-        color: rgba(30, 42, 38, 0.62);
-        font-weight: 720;
-      }
-
-      label {
-        display: block;
-        font-size: 12px;
-        color: rgba(30, 42, 38, 0.68);
-        margin: 0 0 6px 2px;
-      }
-      input,
-      button,
-      select {
-        font: inherit;
-      }
-      input,
-      select {
-        width: 100%;
-        padding: 10px 12px;
-        border-radius: var(--radius2);
-        border: 1px solid rgba(30, 42, 38, 0.18);
-        background: rgba(255, 255, 255, 0.72);
-        color: var(--ink);
-        outline: none;
-      }
-
-      .actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-top: 10px;
-      }
-      button {
-        border: 1px solid rgba(30, 42, 38, 0.18);
-        background: linear-gradient(180deg, rgba(47, 125, 74, 0.92), rgba(47, 125, 74, 0.80));
-        color: #fff;
-        padding: 10px 12px;
-        border-radius: var(--radius2);
-        cursor: pointer;
-        font-weight: 760;
-      }
-      button.secondary {
-        background: rgba(255, 255, 255, 0.72);
-        color: var(--ink);
-      }
-      button.danger {
-        background: linear-gradient(180deg, rgba(197, 57, 57, 0.94), rgba(197, 57, 57, 0.82));
-      }
-
-      .hint {
-        color: rgba(30, 42, 38, 0.70);
-        font-size: 12px;
-        line-height: 1.45;
-        margin-top: 8px;
-      }
-
-      .list {
-        display: grid;
-        gap: 10px;
-      }
-      .item {
-        border-radius: var(--radius);
-        border: 1px solid rgba(30, 42, 38, 0.12);
-        background: rgba(255, 255, 255, 0.70);
-        padding: 12px 12px;
-        display: grid;
-        gap: 8px;
-      }
-      .row {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-      .mono {
-        font-family: var(--mono);
-        font-size: 12px;
-        color: rgba(30, 42, 38, 0.72);
-      }
-      .status {
-        font-family: var(--mono);
-        font-size: 12px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(30, 42, 38, 0.14);
-        background: rgba(255, 255, 255, 0.72);
-      }
-      .status.good {
-        border-color: rgba(31, 138, 84, 0.28);
-        color: rgba(31, 138, 84, 0.92);
-      }
-      .status.bad {
-        border-color: rgba(197, 57, 57, 0.28);
-        color: rgba(197, 57, 57, 0.92);
-      }
-
-      .toast {
-        position: fixed;
-        right: 16px;
-        bottom: 16px;
-        width: min(420px, calc(100vw - 32px));
-        display: grid;
-        gap: 10px;
-        z-index: 50;
-      }
-      .toast .t {
-        border-radius: var(--radius);
-        border: 1px solid rgba(30, 42, 38, 0.14);
-        background: rgba(255, 255, 255, 0.86);
-        box-shadow: 0 18px 55px rgba(30, 42, 38, 0.18);
-        padding: 12px 12px;
-        display: grid;
-        gap: 4px;
-      }
-      .toast .t .k {
-        font-family: var(--mono);
-        font-size: 11px;
-        color: rgba(30, 42, 38, 0.62);
-      }
-      .toast .t .m {
-        font-size: 13px;
-        line-height: 1.35;
-        font-weight: 650;
-        color: rgba(30, 42, 38, 0.92);
-      }
-      .toast .t.good {
-        border-color: rgba(31, 138, 84, 0.28);
-      }
-      .toast .t.bad {
-        border-color: rgba(197, 57, 57, 0.28);
-      }
-      a {
-        color: inherit;
-        text-decoration: underline;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 2px;
-      }
-    </style>
+    <link rel="stylesheet" href="/app.css" />
   </head>
-  <body>
-    <div class="wrap">
-      <div class="hero">
-        <div class="brand">
-          <h1>Správa rezervací</h1>
-          <span class="pill" id="baseUrlPill"></span>
+  <body class="page-admin">
+    <div class="grain"></div>
+    <header>
+      <div class="wrap">
+        <div class="hero">
+          <div class="topline">
+            <div class="brand">
+              <h1>Správa rezervací</h1>
+              <span class="pill" id="baseUrlPill"></span>
+            </div>
+            <div class="topActions">
+              <nav class="navTabs" aria-label="Navigace">
+                <a class="pill" href="/app">Rezervace</a>
+                <a class="pill" href="/login">Přihlášení</a>
+                <a class="pill active" href="/admin">Administrace</a>
+              </nav>
+              <a href="/app" class="pill">Zpět na aplikaci</a>
+            </div>
+          </div>
+          <p class="sub">
+            Admin-only pohled na rezervace. Přístup je přes API s hlavičkou <span class="pill">X-Actor-Role: ADMIN</span>.
+          </p>
         </div>
-        <p class="sub">
-          Admin-only pohled na rezervace. Přístup je přes API s hlavičkou <span class="pill">X-Actor-Role: ADMIN</span>.
-        </p>
       </div>
+    </header>
 
+    <main class="wrap">
       <div class="grid">
         <section class="card">
           <h2>Admin přihlášení</h2>
@@ -267,7 +40,7 @@
             <label for="email">Email</label>
             <input id="email" inputmode="email" placeholder="admin@example.com" />
           </div>
-          <div style="height: 10px"></div>
+          <div class="sp10"></div>
           <div>
             <label for="password">Heslo</label>
             <input id="password" type="password" autocomplete="current-password" placeholder="min. 5 znaků" />
@@ -275,7 +48,6 @@
           <div class="actions">
             <button type="button" id="loginBtn">Přihlásit jako admin</button>
             <button type="button" class="secondary" id="logoutBtn">Odhlásit</button>
-            <a href="/app" class="pill" style="text-decoration: none">Zpět na aplikaci</a>
           </div>
           <div class="hint mono">Admin ID: <span id="userIdText">—</span></div>
           <div class="hint">
@@ -289,10 +61,10 @@
             <button class="secondary" type="button" id="reloadBtn" disabled>Obnovit</button>
           </div>
           <div class="list" id="list"></div>
-          <div class="hint" id="emptyHint" style="display: none">Žádné rezervace.</div>
+          <div class="hint hidden" id="emptyHint">Žádné rezervace.</div>
         </section>
       </div>
-    </div>
+    </main>
 
     <div class="toast" id="toast"></div>
 
@@ -358,7 +130,7 @@
           const el = document.createElement("div");
           el.className = "item";
           el.innerHTML = `
-            <div class="row">
+            <div class="rowFlex">
               <div class="mono">Rezervace: ${r.id}</div>
               <div class="status ${statusClass(r.status)}">${r.status}</div>
             </div>
@@ -369,7 +141,7 @@
               <button class="secondary" data-action="confirm" data-id="${r.id}">Confirm</button>
               <button class="secondary" data-action="pay" data-id="${r.id}">Pay</button>
               <button class="danger" data-action="cancel" data-id="${r.id}">Cancel</button>
-              <a class="pill" href="/?reservationId=${encodeURIComponent(r.id)}" style="text-decoration:none">Otevřít</a>
+              <a class="pill" href="/?reservationId=${encodeURIComponent(r.id)}">Otevřít</a>
             </div>
           `;
           list.appendChild(el);

@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.onnick.reservationcamps.domain.Camp;
 import com.onnick.reservationcamps.domain.UserRole;
 import com.onnick.reservationcamps.domain.error.BusinessRuleViolationException;
 import com.onnick.reservationcamps.domain.error.ForbiddenException;
@@ -14,7 +13,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,7 +54,7 @@ class CampServiceTest {
         var service = new CampService(campRepository, campSessionRepository, clock);
 
         var campId = UUID.randomUUID();
-        when(campRepository.findById(campId)).thenReturn(Optional.of(new Camp(campId, "Camp", 1000, NOW)));
+        when(campRepository.existsById(campId)).thenReturn(true);
 
         assertThatThrownBy(
                         () ->
@@ -79,7 +77,7 @@ class CampServiceTest {
         var service = new CampService(campRepository, campSessionRepository, clock);
 
         var campId = UUID.randomUUID();
-        when(campRepository.findById(campId)).thenReturn(Optional.of(new Camp(campId, "Camp", 1000, NOW)));
+        when(campRepository.existsById(campId)).thenReturn(true);
 
         assertThatThrownBy(
                         () ->

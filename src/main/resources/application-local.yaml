@@ -2,17 +2,10 @@ server:
   port: 8081
 
 spring:
-  datasource:
-    # Use file-based H2 so data survive app restart (stored under ./data/).
-    url: jdbc:h2:file:./data/reservationcamps;MODE=PostgreSQL;DATABASE_TO_UPPER=false;CASE_INSENSITIVE_IDENTIFIERS=true
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: ""
-  flyway:
-    locations: classpath:db/migration_h2
-  jpa:
-    hibernate:
-      ddl-auto: validate
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/reservationcamps}
+      auto-index-creation: true
 
 # Create a local ADMIN user on startup (if it doesn't exist).
 bootstrap:

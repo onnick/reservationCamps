@@ -1,78 +1,72 @@
 package com.onnick.reservationcamps.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "reservation")
+@Document("reservation")
 public class Reservation {
     @Id
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "session_id", nullable = false)
-    private CampSession session;
+    private UUID sessionId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private AppUser user;
+    private UUID userId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 32)
     private ReservationStatus status;
 
-    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(name = "confirmed_at")
     private Instant confirmedAt;
 
-    @Column(name = "paid_at")
     private Instant paidAt;
 
-    @Column(name = "cancelled_at")
     private Instant cancelledAt;
+
+    // Denormalized snapshot used by the login UI list endpoint (avoid server-side "joins" in Mongo).
+    private String campName;
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     protected Reservation() {}
 
     public Reservation(
             UUID id,
-            CampSession session,
-            AppUser user,
+            UUID sessionId,
+            UUID userId,
             ReservationStatus status,
             Instant createdAt,
             Instant confirmedAt,
             Instant paidAt,
-            Instant cancelledAt) {
+            Instant cancelledAt,
+            String campName,
+            LocalDate startDate,
+            LocalDate endDate) {
         this.id = id;
-        this.session = session;
-        this.user = user;
+        this.sessionId = sessionId;
+        this.userId = userId;
         this.status = status;
         this.createdAt = createdAt;
         this.confirmedAt = confirmedAt;
         this.paidAt = paidAt;
         this.cancelledAt = cancelledAt;
+        this.campName = campName;
+        this.startDate = startDate;
+        this.endDate = endDate;
     }
 
     public UUID getId() {
         return id;
     }
 
-    public CampSession getSession() {
-        return session;
+    public UUID getSessionId() {
+        return sessionId;
     }
 
-    public AppUser getUser() {
-        return user;
+    public UUID getUserId() {
+        return userId;
     }
 
     public ReservationStatus getStatus() {
@@ -95,6 +89,18 @@ public class Reservation {
         return cancelledAt;
     }
 
+    public String getCampName() {
+        return campName;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
     public void setStatus(ReservationStatus status) {
         this.status = status;
     }
@@ -111,4 +117,3 @@ public class Reservation {
         this.cancelledAt = cancelledAt;
     }
 }
-

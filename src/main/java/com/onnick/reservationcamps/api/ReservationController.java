@@ -36,9 +36,9 @@ public class ReservationController {
         return reservationService.listReservationsForUser(userId).stream()
                 .map(r -> new UserReservationRowResponse(
                         r.getId(),
-                        r.getSession().getCamp().getName(),
-                        r.getSession().getStartDate(),
-                        r.getSession().getEndDate(),
+                        r.getCampName(),
+                        r.getStartDate(),
+                        r.getEndDate(),
                         r.getStatus()))
                 .toList();
     }
@@ -69,8 +69,8 @@ public class ReservationController {
     private static ReservationResponse toResponse(Reservation reservation) {
         return new ReservationResponse(
                 reservation.getId(),
-                reservation.getSession().getId(),
-                reservation.getUser().getId(),
+                reservation.getSessionId(),
+                reservation.getUserId(),
                 reservation.getStatus(),
                 reservation.getCreatedAt(),
                 reservation.getConfirmedAt(),

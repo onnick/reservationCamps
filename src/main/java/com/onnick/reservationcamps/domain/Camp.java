@@ -1,25 +1,19 @@
 package com.onnick.reservationcamps.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "camp")
+@Document("camp")
 public class Camp {
     @Id
     private UUID id;
 
-    @Column(nullable = false, length = 200)
     private String name;
 
-    @Column(name = "base_price_cents", nullable = false)
     private int basePriceCents;
 
-    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     protected Camp() {}
@@ -47,4 +41,3 @@ public class Camp {
         return createdAt;
     }
 }
-

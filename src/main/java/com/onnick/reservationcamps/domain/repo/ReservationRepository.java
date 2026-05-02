@@ -5,34 +5,14 @@ import com.onnick.reservationcamps.domain.ReservationStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
+public interface ReservationRepository extends MongoRepository<Reservation, UUID> {
     Optional<Reservation> findBySessionIdAndUserId(UUID sessionId, UUID userId);
 
-    @Query(
-            """
-            select r
-            from Reservation r
-            join fetch r.session s
-            join fetch s.camp c
-            join fetch r.user u
-            where u.id = :userId
-            order by r.createdAt desc
-            """)
-    List<Reservation> findAllForUserWithJoins(@Param("userId") UUID userId);
+    List<Reservation> findAllByUserIdOrderByCreatedAtDesc(UUID userId);
 
-    @Query(
-            """
-            select r
-            from Reservation r
-            join fetch r.session s
-            join fetch r.user u
-            order by r.createdAt desc
-            """)
-    List<Reservation> findAllWithJoins();
+    List<Reservation> findAllByOrderByCreatedAtDesc();
 
     long countBySessionIdAndStatus(UUID sessionId, ReservationStatus status);
 }

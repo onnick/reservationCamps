@@ -42,8 +42,8 @@ public class AdminReservationController {
     private static ReservationResponse toResponse(Reservation reservation) {
         return new ReservationResponse(
                 reservation.getId(),
-                reservation.getSession().getId(),
-                reservation.getUser().getId(),
+                reservation.getSessionId(),
+                reservation.getUserId(),
                 reservation.getStatus(),
                 reservation.getCreatedAt(),
                 reservation.getConfirmedAt(),

@@ -14,7 +14,6 @@ import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
@@ -29,7 +28,6 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Transactional
     public AppUser createUser(String email, String password, UserRole role) {
         if (email == null || email.isBlank()) {
             throw new BusinessRuleViolationException("user.email.required", "Email is required.");
@@ -51,7 +49,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    @Transactional(readOnly = true)
     public Optional<AppUser> findByEmail(String email) {
         if (email == null) {
             return Optional.empty();
@@ -63,7 +60,6 @@ public class UserService {
         return userRepository.findByEmail(normalized);
     }
 
-    @Transactional(readOnly = true)
     public List<AppUser> searchByEmail(String q) {
         if (q == null) {
             return List.of();
@@ -76,13 +72,11 @@ public class UserService {
         return userRepository.findTop20ByEmailContainingIgnoreCaseOrderByEmailAsc(normalized);
     }
 
-    @Transactional(readOnly = true)
     public List<AppUser> recentUsers() {
         // Used by the demo UI for "pick existing user". In a real app this should be access-controlled.
         return userRepository.findTop20ByOrderByEmailAsc();
     }
 
-    @Transactional(readOnly = true)
     public List<AppUser> listUsers(int limit) {
         int capped = Math.min(Math.max(limit, 1), 500);
         return userRepository
@@ -90,7 +84,6 @@ public class UserService {
                 .getContent();
     }
 
-    @Transactional(readOnly = true)
     public AppUser login(String email, String password) {
         if (email == null || email.isBlank()) {
             throw new BusinessRuleViolationException("user.email.required", "Email is required.");
@@ -109,7 +102,6 @@ public class UserService {
         return user;
     }
 
-    @Transactional(readOnly = true)
     public AppUser requireAdmin(UUID userId) {
         if (userId == null) {
             throw new ForbiddenException("Admin role required.");

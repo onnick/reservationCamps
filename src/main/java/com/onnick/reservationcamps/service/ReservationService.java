@@ -5,6 +5,7 @@ import com.onnick.reservationcamps.domain.ReservationStatus;
 import com.onnick.reservationcamps.domain.error.BusinessRuleViolationException;
 import com.onnick.reservationcamps.domain.error.NotFoundException;
 import com.onnick.reservationcamps.domain.repo.AppUserRepository;
+import com.onnick.reservationcamps.domain.repo.CampRepository;
 import com.onnick.reservationcamps.domain.repo.CampSessionRepository;
 import com.onnick.reservationcamps.domain.repo.ReservationRepository;
 import java.time.Clock;
@@ -13,11 +14,11 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ReservationService {
     private final AppUserRepository userRepository;
+    private final CampRepository campRepository;
     private final CampSessionRepository sessionRepository;
     private final ReservationRepository reservationRepository;
     private final NotificationPort notificationPort;
@@ -25,18 +26,19 @@ public class ReservationService {
 
     public ReservationService(
             AppUserRepository userRepository,
+            CampRepository campRepository,
             CampSessionRepository sessionRepository,
             ReservationRepository reservationRepository,
             NotificationPort notificationPort,
             Clock clock) {
         this.userRepository = userRepository;
+        this.campRepository = campRepository;
         this.sessionRepository = sessionRepository;
         this.reservationRepository = reservationRepository;
         this.notificationPort = notificationPort;
         this.clock = clock;
     }
 
-    @Transactional
     public Reservation createReservation(UUID sessionId, UUID userId) {
         var session =
                 sessionRepository
@@ -46,6 +48,10 @@ public class ReservationService {
                 userRepository
                         .findById(userId)
                         .orElseThrow(() -> new NotFoundException("User not found: " + userId));
+        var camp =
+                campRepository
+                        .findById(session.getCampId())
+                        .orElseThrow(() -> new NotFoundException("Camp not found: " + session.getCampId()));
 
         var today = LocalDate.now(clock);
         if (!today.isBefore(session.getStartDate())) {
@@ -62,25 +68,33 @@ public class ReservationService {
         var reservation =
                 new Reservation(
                         UUID.randomUUID(),
-                        session,
-                        user,
+                        session.getId(),
+                        user.getId(),
                         ReservationStatus.CREATED,
                         Instant.now(clock),
                         null,
                         null,
-                        null);
+                        null,
+                        camp.getName(),
+                        session.getStartDate(),
+                        session.getEndDate());
         return reservationRepository.save(reservation);
     }
 
-    @Transactional
     public Reservation confirmReservation(UUID reservationId) {
         var reservation =
                 reservationRepository
                         .findById(reservationId)
                         .orElseThrow(() -> new NotFoundException("Reservation not found: " + reservationId));
 
+        var session =
+                sessionRepository
+                        .findById(reservation.getSessionId())
+                        .orElseThrow(
+                                () -> new NotFoundException("Session not found: " + reservation.getSessionId()));
+
         var today = LocalDate.now(clock);
-        if (!today.isBefore(reservation.getSession().getStartDate())) {
+        if (!today.isBefore(session.getStartDate())) {
             throw new BusinessRuleViolationException(
                     "reservation.session_started", "Cannot confirm a reservation for a session that already started.");
         }
@@ -91,8 +105,8 @@ public class ReservationService {
                     "Only a CREATED reservation can be confirmed. Current: " + reservation.getStatus());
         }
 
-        var taken = confirmedOrPaidCount(reservation.getSession().getId());
-        if (taken >= reservation.getSession().getCapacity()) {
+        var taken = confirmedOrPaidCount(session.getId());
+        if (taken >= session.getCapacity()) {
             throw new BusinessRuleViolationException(
                     "reservation.capacity_full", "Cannot confirm reservation. Capacity is full.");
         }
@@ -104,7 +118,6 @@ public class ReservationService {
         return saved;
     }
 
-    @Transactional
     public Reservation payReservation(UUID reservationId) {
         var reservation =
                 reservationRepository
@@ -124,15 +137,20 @@ public class ReservationService {
         return saved;
     }
 
-    @Transactional
     public Reservation cancelReservation(UUID reservationId) {
         var reservation =
                 reservationRepository
                         .findById(reservationId)
                         .orElseThrow(() -> new NotFoundException("Reservation not found: " + reservationId));
 
+        var session =
+                sessionRepository
+                        .findById(reservation.getSessionId())
+                        .orElseThrow(
+                                () -> new NotFoundException("Session not found: " + reservation.getSessionId()));
+
         var today = LocalDate.now(clock);
-        if (!today.isBefore(reservation.getSession().getStartDate())) {
+        if (!today.isBefore(session.getStartDate())) {
             throw new BusinessRuleViolationException(
                     "reservation.session_started", "Cannot cancel reservation for a session that already started.");
         }
@@ -151,24 +169,21 @@ public class ReservationService {
         return reservationRepository.save(reservation);
     }
 
-    @Transactional(readOnly = true)
     public Reservation getReservation(UUID reservationId) {
         return reservationRepository
                 .findById(reservationId)
                 .orElseThrow(() -> new NotFoundException("Reservation not found: " + reservationId));
     }
 
-    @Transactional(readOnly = true)
     public List<Reservation> listReservationsForUser(UUID userId) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("User not found: " + userId);
         }
-        return reservationRepository.findAllForUserWithJoins(userId);
+        return reservationRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
     }
 
-    @Transactional(readOnly = true)
     public List<Reservation> listAllReservations() {
-        return reservationRepository.findAllWithJoins();
+        return reservationRepository.findAllByOrderByCreatedAtDesc();
     }
 
     private long confirmedOrPaidCount(UUID sessionId) {

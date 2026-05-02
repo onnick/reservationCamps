@@ -1,31 +1,23 @@
 package com.onnick.reservationcamps.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "app_user")
+@Document("app_user")
 public class AppUser {
     @Id
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 320)
+    @Indexed(unique = true)
     private String email;
 
-    @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 32)
     private UserRole role;
 
-    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     protected AppUser() {}

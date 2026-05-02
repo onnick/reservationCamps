@@ -1,30 +1,16 @@
 services:
   db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: reservationcamps
-      POSTGRES_USER: reservationcamps
-      POSTGRES_PASSWORD: reservationcamps
+    image: mongo:7.0
     ports:
-      - "5432:5432"
+      - "27017:27017"
     volumes:
-      - db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U reservationcamps -d reservationcamps"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
+      - db-data:/data/db
 
   app:
     build:
       context: .
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
-      DB_URL: jdbc:postgresql://db:5432/reservationcamps
-      DB_USERNAME: reservationcamps
-      DB_PASSWORD: reservationcamps
+      MONGODB_URI: mongodb://db:27017/reservationcamps
     ports:
       - "8080:8080"
 

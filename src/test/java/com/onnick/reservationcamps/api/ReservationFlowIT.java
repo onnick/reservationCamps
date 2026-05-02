@@ -30,7 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -39,23 +39,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Import(ReservationFlowIT.FixedClockConfig.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ReservationFlowIT {
-    // Use a public mirror to reduce flakiness caused by Docker Hub rate limiting in CI.
-    static final DockerImageName POSTGRES_IMAGE =
-            DockerImageName.parse("public.ecr.aws/docker/library/postgres:16-alpine")
-                    .asCompatibleSubstituteFor("postgres");
-
     @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(POSTGRES_IMAGE)
-                    .withDatabaseName("reservationcamps")
-                    .withUsername("reservationcamps")
-                    .withPassword("reservationcamps");
+    static final MongoDBContainer mongo =
+            new MongoDBContainer(DockerImageName.parse("mongo:7.0"));
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.data.mongodb.uri", mongo::getReplicaSetUrl);
     }
 
     @TestConfiguration

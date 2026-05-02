@@ -7,8 +7,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.onnick.reservationcamps.domain.AppUser;
-import com.onnick.reservationcamps.domain.Camp;
-import com.onnick.reservationcamps.domain.CampSession;
 import com.onnick.reservationcamps.domain.Reservation;
 import com.onnick.reservationcamps.domain.ReservationStatus;
 import com.onnick.reservationcamps.domain.UserRole;
@@ -46,11 +44,19 @@ class AdminReservationControllerTest {
         var sessionId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
-        var camp = new Camp(UUID.randomUUID(), "Camp", 1000, Instant.EPOCH);
-        var session = new CampSession(sessionId, camp, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 7), 10, Instant.EPOCH);
         var reservation =
-                new Reservation(reservationId, session, user, ReservationStatus.CREATED, Instant.EPOCH, null, null, null);
+                new Reservation(
+                        reservationId,
+                        sessionId,
+                        userId,
+                        ReservationStatus.CREATED,
+                        Instant.EPOCH,
+                        null,
+                        null,
+                        null,
+                        "Camp",
+                        LocalDate.of(2026, 5, 1),
+                        LocalDate.of(2026, 5, 7));
 
         when(userService.requireAdmin(eq(userId))).thenReturn(new AppUser(userId, "admin@example.com", "hash", UserRole.ADMIN, Instant.EPOCH));
         when(reservationService.listAllReservations()).thenReturn(List.of(reservation));

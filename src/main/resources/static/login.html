@@ -4,291 +4,34 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Přihlášení</title>
-    <style>
-      :root {
-        --bg0: #fbf7ee;
-        --bg1: #f3efe4;
-        --ink: #1e2a26;
-        --muted: rgba(30, 42, 38, 0.72);
-        --line: rgba(30, 42, 38, 0.14);
-        --card: rgba(255, 255, 255, 0.72);
-        --card2: rgba(255, 255, 255, 0.58);
-        --shadow: 0 18px 55px rgba(30, 42, 38, 0.13);
-        --good: #1f8a54;
-        --bad: #c53939;
-        --warn: #b6811c;
-        --radius: 18px;
-        --radius2: 12px;
-        --sans: ui-sans-serif, "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, system-ui;
-        --display: ui-serif, "Iowan Old Style", "New York", Palatino, Georgia, serif;
-        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        font-family: var(--sans);
-        color: var(--ink);
-        background:
-          radial-gradient(1200px 600px at 10% 0%, rgba(47, 125, 74, 0.12), transparent 60%),
-          radial-gradient(800px 520px at 90% 0%, rgba(200, 110, 58, 0.10), transparent 55%),
-          radial-gradient(700px 520px at 25% 95%, rgba(47, 95, 143, 0.09), transparent 60%),
-          linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 100%);
-      }
-      .wrap {
-        max-width: 920px;
-        margin: 0 auto;
-        padding: 24px 18px 26px;
-      }
-      .hero {
-        display: grid;
-        gap: 10px;
-        padding: 16px;
-        border-radius: calc(var(--radius) + 2px);
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.80), rgba(255, 255, 255, 0.60));
-        border: 1px solid rgba(30, 42, 38, 0.10);
-        box-shadow: var(--shadow);
-      }
-      .brand {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      h1 {
-        margin: 0;
-        font-family: var(--display);
-        font-weight: 760;
-        font-size: 26px;
-        line-height: 1.05;
-      }
-      .pill {
-        font-family: var(--mono);
-        font-size: 12px;
-        padding: 6px 10px;
-        border: 1px solid rgba(30, 42, 38, 0.14);
-        background: rgba(255, 255, 255, 0.55);
-        border-radius: 999px;
-        color: rgba(30, 42, 38, 0.70);
-      }
-      .sub {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.35;
-      }
-
-      .grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 14px;
-        margin-top: 14px;
-      }
-      @media (min-width: 920px) {
-        .grid {
-          grid-template-columns: 0.9fr 1.1fr;
-        }
-      }
-
-      .card {
-        border: 1px solid rgba(30, 42, 38, 0.10);
-        background: linear-gradient(180deg, var(--card), var(--card2));
-        border-radius: var(--radius);
-        padding: 14px;
-        box-shadow: 0 10px 30px rgba(30, 42, 38, 0.08);
-      }
-      .card h2 {
-        margin: 0 0 10px 0;
-        font-size: 13px;
-        letter-spacing: 0.24px;
-        text-transform: uppercase;
-        color: rgba(30, 42, 38, 0.62);
-        font-weight: 720;
-      }
-
-      label {
-        display: block;
-        font-size: 12px;
-        color: rgba(30, 42, 38, 0.68);
-        margin: 0 0 6px 2px;
-      }
-      input,
-      button {
-        font: inherit;
-      }
-      input {
-        width: 100%;
-        padding: 10px 12px;
-        border-radius: var(--radius2);
-        border: 1px solid rgba(30, 42, 38, 0.18);
-        background: rgba(255, 255, 255, 0.72);
-        color: var(--ink);
-        outline: none;
-      }
-      input:focus {
-        border-color: rgba(47, 125, 74, 0.55);
-        box-shadow: 0 0 0 3px rgba(47, 125, 74, 0.14);
-      }
-
-      .actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        align-items: center;
-        margin-top: 10px;
-      }
-      button {
-        border: 1px solid rgba(30, 42, 38, 0.18);
-        background: linear-gradient(180deg, rgba(47, 125, 74, 0.92), rgba(47, 125, 74, 0.80));
-        color: #fff;
-        padding: 10px 12px;
-        border-radius: var(--radius2);
-        cursor: pointer;
-        font-weight: 760;
-      }
-      button.secondary {
-        background: rgba(255, 255, 255, 0.72);
-        color: var(--ink);
-      }
-
-      .hint {
-        color: rgba(30, 42, 38, 0.70);
-        font-size: 12px;
-        line-height: 1.45;
-        margin-top: 8px;
-      }
-      .hint code {
-        font-family: var(--mono);
-        color: var(--ink);
-      }
-
-      .list {
-        display: grid;
-        gap: 10px;
-      }
-      .mono {
-        font-family: var(--mono);
-        font-size: 12px;
-        color: rgba(30, 42, 38, 0.72);
-      }
-      .status {
-        font-family: var(--mono);
-        font-size: 12px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid rgba(30, 42, 38, 0.14);
-        background: rgba(255, 255, 255, 0.72);
-      }
-      .status.good {
-        border-color: rgba(31, 138, 84, 0.28);
-        color: rgba(31, 138, 84, 0.92);
-      }
-      .status.bad {
-        border-color: rgba(197, 57, 57, 0.28);
-        color: rgba(197, 57, 57, 0.92);
-      }
-
-      .toast {
-        position: fixed;
-        right: 16px;
-        bottom: 16px;
-        width: min(420px, calc(100vw - 32px));
-        display: grid;
-        gap: 10px;
-        z-index: 50;
-      }
-      .toast .t {
-        border-radius: var(--radius);
-        border: 1px solid rgba(30, 42, 38, 0.14);
-        background: rgba(255, 255, 255, 0.86);
-        box-shadow: 0 18px 55px rgba(30, 42, 38, 0.18);
-        padding: 12px 12px;
-        display: grid;
-        gap: 4px;
-      }
-      .toast .t .k {
-        font-family: var(--mono);
-        font-size: 11px;
-        color: rgba(30, 42, 38, 0.62);
-      }
-      .toast .t .m {
-        font-size: 13px;
-        line-height: 1.35;
-        font-weight: 650;
-        color: rgba(30, 42, 38, 0.92);
-      }
-      .toast .t.good {
-        border-color: rgba(31, 138, 84, 0.28);
-      }
-      .toast .t.bad {
-        border-color: rgba(197, 57, 57, 0.28);
-      }
-      a {
-        color: inherit;
-        text-decoration: underline;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 2px;
-      }
-
-      .resGridWrap {
-        width: 100%;
-        overflow-x: auto;
-      }
-
-      table.resGrid {
-        display: table; /* avoid collision with the page-layout `.grid` class */
-        width: 100%;
-        border-collapse: collapse;
-        border: 1px solid rgba(30, 42, 38, 0.12);
-        border-radius: var(--radius);
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.70);
-      }
-      table.resGrid th,
-      table.resGrid td {
-        padding: 10px 10px;
-        border-bottom: 1px solid rgba(30, 42, 38, 0.10);
-        text-align: left;
-        vertical-align: middle;
-        font-size: 13px;
-      }
-      table.resGrid th {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.22px;
-        color: rgba(30, 42, 38, 0.62);
-        background: rgba(255, 255, 255, 0.55);
-      }
-      table.resGrid tr:last-child td {
-        border-bottom: none;
-      }
-      .cell-id {
-        font-family: var(--mono);
-        font-size: 12px;
-      }
-      .cell-status {
-        white-space: nowrap;
-      }
-    </style>
+    <link rel="stylesheet" href="/app.css" />
   </head>
-  <body>
-    <div class="wrap">
-      <div class="hero">
-        <div class="brand">
-          <h1>Přihlášení</h1>
-          <span class="pill" id="baseUrlPill"></span>
+  <body class="page-login">
+    <div class="grain"></div>
+    <header>
+      <div class="wrap">
+        <div class="hero">
+          <div class="topline">
+            <div class="brand">
+              <h1>Přihlášení</h1>
+              <span class="pill" id="baseUrlPill"></span>
+            </div>
+            <div class="topActions">
+              <nav class="navTabs" aria-label="Navigace">
+                <a class="pill" href="/app">Rezervace</a>
+                <a class="pill active" href="/login">Přihlášení</a>
+                <a class="pill" href="/admin">Administrace</a>
+              </nav>
+            </div>
+          </div>
+          <p class="sub">
+            Přihlaste se a uvidíte seznam vašich rezervací. Pokud jste admin, přesměrujeme vás na správu rezervací.
+          </p>
         </div>
-        <p class="sub">
-          Přihlaste se a uvidíte seznam vašich rezervací. Pokud jste admin, přesměrujeme vás na správu rezervací.
-        </p>
       </div>
+    </header>
 
+    <main class="wrap">
       <div class="grid">
         <section class="card">
           <h2>Účet</h2>
@@ -296,7 +39,7 @@
             <label for="email">Email</label>
             <input id="email" inputmode="email" placeholder="např. jana.novakova@example.com" />
           </div>
-          <div style="height: 10px"></div>
+          <div class="sp10"></div>
           <div>
             <label for="password">Heslo</label>
             <input id="password" type="password" autocomplete="current-password" placeholder="min. 5 znaků" />
@@ -312,10 +55,10 @@
         <section class="card">
           <h2>Moje rezervace</h2>
           <div id="grid"></div>
-          <div class="hint" id="emptyHint" style="display: none">Zatím nemáte žádné rezervace.</div>
+          <div class="hint hidden" id="emptyHint">Zatím nemáte žádné rezervace.</div>
         </section>
       </div>
-    </div>
+    </main>
 
     <div class="toast" id="toast"></div>
 
@@ -376,10 +119,10 @@
       function render(items) {
         grid.innerHTML = "";
         if (!items || !items.length) {
-          emptyHint.style.display = "block";
+          emptyHint.classList.remove("hidden");
           return;
         }
-        emptyHint.style.display = "none";
+        emptyHint.classList.add("hidden");
         const wrap = document.createElement("div");
         wrap.className = "resGridWrap";
         const t = document.createElement("table");
@@ -410,25 +153,6 @@
         grid.appendChild(wrap);
       }
 
-      let sessionIndexPromise = null;
-      async function getSessionIndex() {
-        if (sessionIndexPromise) return sessionIndexPromise;
-        sessionIndexPromise = (async () => {
-          const sessionsById = new Map();
-          const campNameById = new Map();
-          const camps = await request("GET", "/api/camps");
-          for (const c of camps || []) campNameById.set(c.id, c.name);
-          const sessionLists = await Promise.all(
-            (camps || []).map((c) => request("GET", `/api/camps/${encodeURIComponent(c.id)}/sessions`))
-          );
-          for (const sessions of sessionLists) {
-            for (const s of sessions || []) sessionsById.set(s.id, s);
-          }
-          return { sessionsById, campNameById };
-        })();
-        return sessionIndexPromise;
-      }
-
       async function loadReservations() {
         if (!state.userId) {
           render([]);
@@ -440,111 +164,59 @@
             render([]);
             return;
           }
-
-          let rows;
-          // Backwards-compatible: older API returned reservations with sessionId; newer returns flattened start/end.
-          if (data.length && !data[0].startDate && data[0].sessionId) {
-            const lookup = await getSessionIndex();
-            rows = data.map((r) => {
-              const s = lookup.sessionsById.get(r.sessionId);
-              const campName = s ? lookup.campNameById.get(s.campId) : undefined;
-              return {
-                id: r.id,
-                campName,
-                startDate: s ? s.startDate : undefined,
-                endDate: s ? s.endDate : undefined,
-                status: r.status,
-              };
-            });
-          } else {
-            rows = data.map((r) => ({
+          render(
+            data.map((r) => ({
               id: r.id,
               campName: r.campName,
               startDate: r.startDate,
               endDate: r.endDate,
               status: r.status,
-            }));
-          }
-
-          // If campName is missing (e.g. older backend), fill it via reservation detail -> session -> camp index.
-          const missing = rows.filter((r) => r && r.id && !r.campName);
-          if (missing.length) {
-            try {
-              const details = await Promise.all(
-                missing.map((r) => request("GET", `/api/reservations/${encodeURIComponent(r.id)}`))
-              );
-              const lookup = await getSessionIndex();
-              const byId = new Map(missing.map((r) => [r.id, r]));
-              for (const d of details || []) {
-                const row = d && d.id ? byId.get(d.id) : null;
-                if (!row) continue;
-                const s = d.sessionId ? lookup.sessionsById.get(d.sessionId) : null;
-                if (!s) continue;
-                const campName = lookup.campNameById.get(s.campId);
-                if (campName) row.campName = campName;
-              }
-            } catch (_) {
-              // Ignore enrichment errors; UI still renders dates/status.
-            }
-          }
-
-          render(rows);
+            }))
+          );
         } catch (e) {
-          toast("bad", niceError(e), "Rezervace");
+          toast("bad", niceError(e), "rezervace");
           render([]);
         }
       }
 
       async function login() {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
+        const email = (document.getElementById("email").value || "").trim().toLowerCase();
+        const password = document.getElementById("password").value || "";
         if (!email) {
-          toast("bad", "Zadejte email.", "Přihlášení");
+          toast("bad", "Zadejte email.", "přihlášení");
           return;
         }
-        if (!password || password.length < 5) {
-          toast("bad", "Zadejte heslo (min. 5 znaků).", "Přihlášení");
+        if (!password) {
+          toast("bad", "Zadejte heslo.", "přihlášení");
           return;
         }
         try {
           const res = await request("POST", "/api/users/login", { email, password });
-          localStorage.setItem(LS.email, email.toLowerCase());
-          setUserId(res.id);
-
-          // Determine role (demo approach).
-          const user = await request("GET", `/api/users/by-email?email=${encodeURIComponent(email)}`);
-          if (user && user.role === "ADMIN") {
-            toast("good", "Přihlášeno jako ADMIN. Přesměrovávám…", "Přihlášení");
-            window.location.assign("/app");
-            return;
-          }
-
-          toast("good", "Přihlášeno.", "Přihlášení");
+          setUserId(res && res.id ? res.id : null);
+          localStorage.setItem(LS.email, email);
+          toast("good", "Přihlášení proběhlo.", "přihlášení");
           await loadReservations();
         } catch (e) {
-          toast("bad", niceError(e), "Přihlášení");
+          toast("bad", niceError(e), "přihlášení");
         }
       }
 
       function logout() {
-        localStorage.removeItem(LS.email);
         setUserId(null);
+        toast("good", "Odhlášeno.", "přihlášení");
         render([]);
-        toast("good", "Odhlášeno.", "Přihlášení");
       }
 
       document.getElementById("loginBtn").addEventListener("click", login);
       document.getElementById("logoutBtn").addEventListener("click", logout);
 
-      // Restore last userId for convenience (still requires real login to be "secure",
-      // but this is a demo app, and we want easy UX for local testing).
-      const lastEmail = localStorage.getItem(LS.email);
-      const lastUserId = localStorage.getItem(LS.userId);
-      if (lastEmail) document.getElementById("email").value = lastEmail;
-      if (lastUserId) {
-        setUserId(lastUserId);
-        loadReservations();
-      }
+      // Restore from localStorage
+      const savedUserId = localStorage.getItem(LS.userId);
+      const savedEmail = localStorage.getItem(LS.email);
+      if (savedEmail) document.getElementById("email").value = savedEmail;
+      if (savedUserId) setUserId(savedUserId);
+      loadReservations();
     </script>
   </body>
 </html>
+

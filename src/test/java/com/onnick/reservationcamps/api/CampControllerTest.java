@@ -64,7 +64,7 @@ class CampControllerTest {
                 .thenReturn(
                         new CampSession(
                                 sessionId,
-                                new Camp(campId, "Camp", 1000, Instant.EPOCH),
+                                campId,
                                 LocalDate.of(2026, 5, 1),
                                 LocalDate.of(2026, 5, 7),
                                 10,

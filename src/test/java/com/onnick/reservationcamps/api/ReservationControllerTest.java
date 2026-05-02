@@ -9,12 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onnick.reservationcamps.api.dto.CreateReservationRequest;
-import com.onnick.reservationcamps.domain.AppUser;
-import com.onnick.reservationcamps.domain.Camp;
-import com.onnick.reservationcamps.domain.CampSession;
 import com.onnick.reservationcamps.domain.Reservation;
 import com.onnick.reservationcamps.domain.ReservationStatus;
-import com.onnick.reservationcamps.domain.UserRole;
 import com.onnick.reservationcamps.service.ReservationService;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -42,13 +38,19 @@ class ReservationControllerTest {
         var userId = UUID.randomUUID();
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
-        var camp = new Camp(UUID.randomUUID(), "Camp", 1000, Instant.EPOCH);
-        var session =
-                new CampSession(
-                        sessionId, camp, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 7), 10, Instant.EPOCH);
         var reservation =
-                new Reservation(reservationId, session, user, ReservationStatus.CREATED, Instant.EPOCH, null, null, null);
+                new Reservation(
+                        reservationId,
+                        sessionId,
+                        userId,
+                        ReservationStatus.CREATED,
+                        Instant.EPOCH,
+                        null,
+                        null,
+                        null,
+                        "Camp",
+                        LocalDate.of(2026, 5, 1),
+                        LocalDate.of(2026, 5, 7));
 
         when(reservationService.createReservation(eq(sessionId), eq(userId))).thenReturn(reservation);
 
@@ -67,13 +69,19 @@ class ReservationControllerTest {
     void confirmCallsService() throws Exception {
         var reservationId = UUID.randomUUID();
 
-        var user = new AppUser(UUID.randomUUID(), "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
-        var camp = new Camp(UUID.randomUUID(), "Camp", 1000, Instant.EPOCH);
-        var session =
-                new CampSession(
-                        UUID.randomUUID(), camp, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 7), 10, Instant.EPOCH);
         var reservation =
-                new Reservation(reservationId, session, user, ReservationStatus.CONFIRMED, Instant.EPOCH, Instant.EPOCH, null, null);
+                new Reservation(
+                        reservationId,
+                        UUID.randomUUID(),
+                        UUID.randomUUID(),
+                        ReservationStatus.CONFIRMED,
+                        Instant.EPOCH,
+                        Instant.EPOCH,
+                        null,
+                        null,
+                        "Camp",
+                        LocalDate.of(2026, 5, 1),
+                        LocalDate.of(2026, 5, 7));
 
         when(reservationService.confirmReservation(eq(reservationId))).thenReturn(reservation);
 
@@ -87,13 +95,19 @@ class ReservationControllerTest {
         var userId = UUID.randomUUID();
         var sessionId = UUID.randomUUID();
 
-        var user = new AppUser(userId, "a@example.com", "hash", UserRole.CUSTOMER, Instant.EPOCH);
-        var camp = new Camp(UUID.randomUUID(), "Camp", 1000, Instant.EPOCH);
-        var session =
-                new CampSession(
-                        sessionId, camp, LocalDate.of(2026, 5, 1), LocalDate.of(2026, 5, 7), 10, Instant.EPOCH);
         var reservation =
-                new Reservation(UUID.randomUUID(), session, user, ReservationStatus.CREATED, Instant.EPOCH, null, null, null);
+                new Reservation(
+                        UUID.randomUUID(),
+                        sessionId,
+                        userId,
+                        ReservationStatus.CREATED,
+                        Instant.EPOCH,
+                        null,
+                        null,
+                        null,
+                        "Camp",
+                        LocalDate.of(2026, 5, 1),
+                        LocalDate.of(2026, 5, 7));
 
         when(reservationService.listReservationsForUser(eq(userId))).thenReturn(List.of(reservation));
 
