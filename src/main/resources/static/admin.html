@@ -75,6 +75,7 @@
       const emptyHint = document.getElementById("emptyHint");
       const userIdText = document.getElementById("userIdText");
 
+      const LS = { userId: "rc_auth_user_id", role: "rc_auth_role", email: "rc_auth_email" };
       const state = { adminId: null };
 
       function toast(kind, msg, meta) {
@@ -170,16 +171,16 @@
 
         try {
           const login = await request("POST", "/api/users/login", { email, password });
-
-          // Verify role is ADMIN (demo approach).
-          const user = await request("GET", `/api/users/by-email?email=${encodeURIComponent(email)}`);
-          if (!user || user.role !== "ADMIN") {
+          if (!login || login.role !== "ADMIN") {
             setAdminId(null);
             toast("bad", "Tento účet není ADMIN.", "Admin");
             return;
           }
 
           setAdminId(login.id);
+          localStorage.setItem(LS.userId, login.id);
+          localStorage.setItem(LS.role, login.role);
+          localStorage.setItem(LS.email, email);
           toast("good", "Přihlášeno jako ADMIN.", "Admin");
           await loadAll();
         } catch (e) {
@@ -190,6 +191,8 @@
 
       function logout() {
         setAdminId(null);
+        localStorage.removeItem(LS.userId);
+        localStorage.removeItem(LS.role);
         render([]);
         toast("good", "Odhlášeno.", "Admin");
       }
@@ -211,6 +214,18 @@
       document.getElementById("loginBtn").addEventListener("click", loginAdmin);
       document.getElementById("logoutBtn").addEventListener("click", logout);
       document.getElementById("reloadBtn").addEventListener("click", loadAll);
+
+      // Auto-login from /login (admin redirect) if present.
+      (function initAuth() {
+        const id = localStorage.getItem(LS.userId);
+        const role = localStorage.getItem(LS.role);
+        const email = localStorage.getItem(LS.email);
+        if (email) document.getElementById("email").value = email;
+        if (id && role === "ADMIN") {
+          setAdminId(id);
+          loadAll();
+        }
+      })();
     </script>
   </body>
 </html>

@@ -3,6 +3,7 @@ package com.onnick.reservationcamps.api;
 import com.onnick.reservationcamps.api.dto.CreateUserRequest;
 import com.onnick.reservationcamps.api.dto.IdResponse;
 import com.onnick.reservationcamps.api.dto.LoginRequest;
+import com.onnick.reservationcamps.api.dto.LoginResponse;
 import com.onnick.reservationcamps.api.dto.UserResponse;
 import com.onnick.reservationcamps.api.dto.UserSummaryResponse;
 import com.onnick.reservationcamps.domain.UserRole;
@@ -65,8 +66,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public IdResponse login(@Valid @RequestBody LoginRequest request) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         var user = userService.login(request.email(), request.password());
-        return new IdResponse(user.getId());
+        return new LoginResponse(user.getId(), user.getRole());
     }
 }

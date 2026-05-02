@@ -70,8 +70,8 @@
       const emptyHint = document.getElementById("emptyHint");
       const userIdText = document.getElementById("userIdText");
 
-      const LS = { userId: "rc_login_user_id", email: "rc_login_email" };
-      const state = { userId: null };
+      const LS = { userId: "rc_auth_user_id", role: "rc_auth_role", email: "rc_auth_email" };
+      const state = { userId: null, role: null };
 
       function toast(kind, msg, meta) {
         const el = document.createElement("div");
@@ -108,6 +108,12 @@
         userIdText.textContent = state.userId || "—";
         if (state.userId) localStorage.setItem(LS.userId, state.userId);
         else localStorage.removeItem(LS.userId);
+      }
+
+      function setRole(role) {
+        state.role = role || null;
+        if (state.role) localStorage.setItem(LS.role, state.role);
+        else localStorage.removeItem(LS.role);
       }
 
       function statusClass(s) {
@@ -193,8 +199,13 @@
         try {
           const res = await request("POST", "/api/users/login", { email, password });
           setUserId(res && res.id ? res.id : null);
+          setRole(res && res.role ? res.role : null);
           localStorage.setItem(LS.email, email);
           toast("good", "Přihlášení proběhlo.", "přihlášení");
+          if (res && res.role === "ADMIN") {
+            window.location.assign("/admin");
+            return;
+          }
           await loadReservations();
         } catch (e) {
           toast("bad", niceError(e), "přihlášení");
@@ -203,6 +214,7 @@
 
       function logout() {
         setUserId(null);
+        setRole(null);
         toast("good", "Odhlášeno.", "přihlášení");
         render([]);
       }
@@ -213,10 +225,11 @@
       // Restore from localStorage
       const savedUserId = localStorage.getItem(LS.userId);
       const savedEmail = localStorage.getItem(LS.email);
+      const savedRole = localStorage.getItem(LS.role);
       if (savedEmail) document.getElementById("email").value = savedEmail;
       if (savedUserId) setUserId(savedUserId);
+      if (savedRole) setRole(savedRole);
       loadReservations();
     </script>
   </body>
 </html>
-
